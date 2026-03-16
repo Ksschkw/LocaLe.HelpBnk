@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0D1117">
+  <title>LocaLe — Confirm Release</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <header class="top-bar">
+      <div class="top-bar__logo">LocaLe</div>
+      <div class="top-bar__actions">
+        <button class="top-bar__icon">🔔</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <a href="scan.html" class="back-btn">← Back</a>
+
+      <h1 class="page-title text-center">Confirm Release</h1>
+      <p class="page-subtitle text-center">You're about to release payment to the provider. This cannot be undone.</p>
+
+      <!-- Amount Card -->
+      <div class="card" style="cursor: default; text-align: center; margin-top: var(--space-lg);">
+        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: var(--space-sm);">Releasing to</div>
+        <div style="display: flex; align-items: center; justify-content: center; gap: var(--space-md); margin-bottom: var(--space-md);">
+          <div class="provider-avatar" style="width: 44px; height: 44px; font-size: 1rem;">CO</div>
+          <div>
+            <div style="font-weight: 600;" data-bind="providerName">Chidi Okeke</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Escrow: <span data-bind="escrowRef">LCL-0001</span></div>
+          </div>
+        </div>
+        <div class="amount-display" style="padding: var(--space-sm) 0;">
+          <div class="amount-display__value" data-bind="price">₦5,000</div>
+        </div>
+      </div>
+
+      <!-- Breakdown -->
+      <div class="receipt mt-lg">
+        <div class="receipt__row">
+          <span class="receipt__label">Job Amount</span>
+          <span class="receipt__value" data-bind="price">₦5,000</span>
+        </div>
+        <div class="receipt__row">
+          <span class="receipt__label">Security Fee</span>
+          <span class="receipt__value" data-bind="fee">₦100</span>
+        </div>
+        <div class="receipt__row receipt__total">
+          <span class="receipt__label fw-600">Total Charged</span>
+          <span class="receipt__value" data-bind="total">₦5,100</span>
+        </div>
+      </div>
+
+      <!-- Confirm Checkbox -->
+      <div class="checkbox-group" onclick="toggleConfirm()">
+        <input type="checkbox" id="confirmCheck" onchange="toggleConfirm()">
+        <label for="confirmCheck">
+          I confirm the job is complete and I'm satisfied with the work. I understand this releases payment to the provider <strong>instantly</strong>.
+        </label>
+      </div>
+
+      <div class="info-text info-text--red">
+        ⚠️ After release, funds are sent to the provider immediately. This cannot be reversed.
+      </div>
+
+    </main>
+
+    <!-- Floating Action -->
+    <div class="action-area">
+      <a href="receipt.html" class="btn btn--primary" id="releaseBtn" style="opacity: 0.5; pointer-events: none;">
+        🔓 Release Payment
+      </a>
+      <a href="status.html" class="btn btn--secondary mt-sm" style="font-size: 0.85rem;">
+        Cancel — go back
+      </a>
+    </div>
+
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#0A0E1A">
+  <meta name="description" content="LocaLe — Book local help in your neighborhood. Money is held safely until the job is done. No scams. No unpaid work.">
+  <meta property="og:title" content="LocaLe — Trusted Neighborhood Services">
+  <meta property="og:description" content="Book local help. Money is held until the job is done. QR-verified. Instant payout.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <title>LocaLe — Trusted Neighborhood Services</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ============ NAV ============ -->
+  <nav class="nav" id="nav">
+    <div class="nav__inner">
+      <div class="nav__logo">LocaLe</div>
+      <button class="btn-cta btn-cta--sm nav__cta" onclick="openModal('nav')">Join Waitlist</button>
+    </div>
+  </nav>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="hero">
+    <div class="hero__bg-grid"></div>
+    <div class="hero__glow hero__glow--1"></div>
+    <div class="hero__glow hero__glow--2"></div>
+    <div class="container hero__inner">
+
+      <div class="hero__badge">
+        <span class="hero__badge-dot"></span>
+        Now accepting pilot sign-ups · Ihiagwa/Eziobodo · FUTO
+      </div>
+
+      <h1 class="hero__headline">
+        Book local help.<br>
+        <span class="gradient-text">Money is held until<br>the job is done.</span>
+      </h1>
+
+      <p class="hero__sub">
+        No more "I paid and he disappeared."<br>
+        No more "I worked and they didn't pay."<br>
+        LocaLe uses escrow + QR verification to protect everyone.
+      </p>
+
+      <div class="hero__actions">
+        <button class="btn-cta btn-cta--lg pulse" onclick="openModal('hero')">
+          🚀 Join the Waitlist — It's Free
+        </button>
+        <a href="#how" class="hero__link">See how it works ↓</a>
+      </div>
+
+      <div class="hero__stats">
+        <div class="hero__stat">
+          <div class="hero__stat-value">₦100</div>
+          <div class="hero__stat-label">Flat pilot fee</div>
+        </div>
+        <div class="hero__stat-divider"></div>
+        <div class="hero__stat">
+          <div class="hero__stat-value">&lt; 5 min</div>
+          <div class="hero__stat-label">Payout after release</div>
+        </div>
+        <div class="hero__stat-divider"></div>
+        <div class="hero__stat">
+          <div class="hero__stat-value">QR</div>
+          <div class="hero__stat-label">Verified completion</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ TRUST STRIP ============ -->
+  <section class="trust-strip">
+    <div class="container trust-strip__inner">
+      <span class="trust-strip__item">🔒 Escrow-protected</span>
+      <span class="trust-strip__dot">·</span>
+      <span class="trust-strip__item">📱 QR-verified jobs</span>
+      <span class="trust-strip__dot">·</span>
+      <span class="trust-strip__item">⚡ Instant payouts</span>
+      <span class="trust-strip__dot">·</span>
+      <span class="trust-strip__item">🛡️ Dispute protection</span>
+      <span class="trust-strip__dot">·</span>
+      <span class="trust-strip__item">📍 Neighborhood-first</span>
+    </div>
+  </section>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <section class="section" id="how">
+    <div class="container">
+      <div class="section__header">
+        <div class="section__tag">How it works</div>
+        <h2 class="section__title">3 steps. Zero stress.</h2>
+        <p class="section__sub">Built for the way Nigerians actually transact — fast, local, cash-first in spirit but safe in practice.</p>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step__num">01</div>
+          <div class="step__icon">📋</div>
+          <h3 class="step__title">Book a Job</h3>
+          <p class="step__desc">Post what you need — laundry, repair, cleaning, errands. Pick from nearby verified providers. Set your price.</p>
+        </div>
+        <div class="step__arrow">→</div>
+        <div class="step">
+          <div class="step__num">02</div>
+          <div class="step__icon">🔒</div>
+          <h3 class="step__title">Funds Secured</h3>
+          <p class="step__desc">Transfer or card payment goes into escrow. Provider is notified and starts the job. No one touches the money yet.</p>
+        </div>
+        <div class="step__arrow">→</div>
+        <div class="step">
+          <div class="step__num">03</div>
+          <div class="step__icon">📷</div>
+          <h3 class="step__title">QR Release</h3>
+          <p class="step__desc">Satisfied? Scan the provider's QR code. Payment releases instantly — under 5 minutes. Provider gets paid via transfer.</p>
+        </div>
+      </div>
+
+      <div class="how-callout">
+        <div class="how-callout__icon">💡</div>
+        <div>
+          <strong>The QR code works even with weak network.</strong> No "my internet was bad" excuses.
+          And yes — the code is one-time use, tied to your specific job only.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SERVICES ============ -->
+  <section class="section section--dark" id="services">
+    <div class="container">
+      <div class="section__header">
+        <div class="section__tag">Micro-jobs</div>
+        <h2 class="section__title">What you can book <span class="gradient-text">right now</span></h2>
+        <p class="section__sub">Starting with Ihiagwa/Eziobodo (FUTO). More neighborhoods coming soon.</p>
+      </div>
+
+      <div class="services-grid">
+        <div class="service-card">
+          <div class="service-card__icon">👕</div>
+          <div class="service-card__name">Laundry & Ironing</div>
+          <div class="service-card__price">₦1,500 – ₦5,000</div>
+          <div class="service-card__tag hot">🔥 Most requested</div>
+        </div>
+        <div class="service-card">
+          <div class="service-card__icon">🧹</div>
+          <div class="service-card__name">Room Cleaning</div>
+          <div class="service-card__price">₦2,000 – ₦8,000</div>
+        </div>
+        <div class="service-card">
+          <div class="service-card__icon">📱</div>
+          <div class="service-card__name">Phone / Laptop Repair</div>
+          <div class="service-card__price">₦3,000 – ₦15,000</div>
+          <div class="service-card__tag">🔐 Escrow required</div>
+        </div>
+        <div class="service-card">
+          <div class="service-card__icon">📦</div>
+          <div class="service-card__name">Errands & Delivery</div>
+          <div class="service-card__price">₦500 – ₦3,000</div>
+          <div class="service-card__tag quick">⚡ Quick jobs</div>
+        </div>
+        <div class="service-card">
+          <div class="service-card__icon">⚡</div>
+          <div class="service-card__name">Generator Repair</div>
+          <div class="service-card__price">₦2,000 – ₦10,000</div>
+        </div>
+        <div class="service-card">
+          <div class="service-card__icon">✂️</div>
+          <div class="service-card__name">Home Barbing / Hair</div>
+          <div class="service-card__price">₦1,000 – ₦4,000</div>
+        </div>
+        <div class="service-card">
+          <div class="service-card__icon">📚</div>
+          <div class="service-card__name">Tutoring</div>
+          <div class="service-card__price">₦2,000 – ₦8,000</div>
+        </div>
+        <div class="service-card service-card--more">
+          <div class="service-card__icon">＋</div>
+          <div class="service-card__name">More coming</div>
+          <div class="service-card__price">You suggest, we add</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PRICING ============ -->
+  <section class="section" id="pricing">
+    <div class="container">
+      <div class="section__header">
+        <div class="section__tag">Pricing</div>
+        <h2 class="section__title">Simple. Transparent. <span class="gradient-text">Flat fee.</span></h2>
+        <p class="section__sub">We're testing what feels fair. Your sign-up vote counts.</p>
+      </div>
+
+      <div class="pricing-cards">
+        <div class="pricing-card pricing-card--featured">
+          <div class="pricing-card__badge">🧪 Pilot Option A</div>
+          <div class="pricing-card__amount">₦100</div>
+          <div class="pricing-card__label">Flat "Security Fee"</div>
+          <div class="pricing-card__desc">Pay just ₦100 per booking for escrow protection. Same fee whether the job is ₦500 or ₦20,000.</div>
+          <ul class="pricing-card__perks">
+            <li>✓ Predictable cost</li>
+            <li>✓ Providers preferred it</li>
+            <li>✓ Simple to explain</li>
+          </ul>
+        </div>
+        <div class="pricing-card">
+          <div class="pricing-card__badge">🧪 Pilot Option B</div>
+          <div class="pricing-card__amount">3%</div>
+          <div class="pricing-card__label">Of Transaction Value</div>
+          <div class="pricing-card__desc">Fee scales with job size. ₦150 on a ₦5,000 job. Better for high-value repairs and services.</div>
+          <ul class="pricing-card__perks">
+            <li>✓ Scales fairly</li>
+            <li>✓ Zero on free jobs</li>
+            <li>✓ Standard model</li>
+          </ul>
+        </div>
+        <div class="pricing-card">
+          <div class="pricing-card__badge">🆓 Pilot Launch</div>
+          <div class="pricing-card__amount">Free</div>
+          <div class="pricing-card__label">For Early Adopters</div>
+          <div class="pricing-card__desc">First 200 sign-ups get free access during the pilot. Help us test, shape the product.</div>
+          <ul class="pricing-card__perks">
+            <li>✓ Zero cost during pilot</li>
+            <li>✓ Early access</li>
+            <li>✓ Founding member status</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="pricing-vote-note">
+        📊 <strong>We're asking in the waitlist:</strong> Which fee feels fair to you?
+        Your answer directly shapes our launch pricing.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NEIGHBORHOODS ============ -->
+  <section class="section section--dark" id="areas">
+    <div class="container">
+      <div class="section__header">
+        <div class="section__tag">Coverage</div>
+        <h2 class="section__title">Where we're launching <span class="gradient-text">first</span></h2>
+      </div>
+
+      <div class="zones">
+        <div class="zone zone--active">
+          <div class="zone__status">🟢 Pilot Active</div>
+          <h3 class="zone__name">Ihiagwa / Eziobodo</h3>
+          <p class="zone__sub">FUTO Area · Owerri, Imo State</p>
+          <div class="zone__tags">
+            <span>Hostels</span><span>Shops</span><span>Repair spots</span><span>Student market</span>
+          </div>
+        </div>
+        <div class="zone">
+          <div class="zone__status">🔜 Coming Soon</div>
+          <h3 class="zone__name">Ojo / LASU Axis</h3>
+          <p class="zone__sub">Lagos State</p>
+          <div class="zone__tags">
+            <span>Artisans</span><span>Home repairs</span><span>Generator techs</span>
+          </div>
+        </div>
+        <div class="zone">
+          <div class="zone__status">🔜 Coming Soon</div>
+          <h3 class="zone__name">Lekki Igbuefon</h3>
+          <p class="zone__sub">Lagos State · Premium residential</p>
+          <div class="zone__tags">
+            <span>Cleaning</span><span>Smart home</span><span>High-value services</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="zones__note">Not in these areas? Sign up anyway — your zone might be next based on demand.</p>
+    </div>
+  </section>
+
+  <!-- ============ SOCIAL PROOF ============ -->
+  <section class="section" id="proof">
+    <div class="container">
+      <div class="section__header">
+        <div class="section__tag">Validation</div>
+        <h2 class="section__title">Real pain. Real people. <span class="gradient-text">Real signal.</span></h2>
+        <p class="section__sub">We observed and interviewed people in the FUTO area before building anything.</p>
+      </div>
+
+      <div class="quotes">
+        <div class="quote-card">
+          <div class="quote-card__text">"The laundry guy collected our clothes last week. Nobody has seen him since. We have to go to his house tomorrow..."</div>
+          <div class="quote-card__from">Student, Ihiagwa hostel</div>
+          <div class="quote-card__type">Buyer frustration</div>
+        </div>
+        <div class="quote-card">
+          <div class="quote-card__text">"I fixed the phone perfectly, they called me to pick up and said it's still broken. They just wanted to use it and not pay."</div>
+          <div class="quote-card__from">Phone technician, FUTO gate area</div>
+          <div class="quote-card__type">Provider frustration</div>
+        </div>
+        <div class="quote-card">
+          <div class="quote-card__text">"If there's something that holds the money and releases only when I'm satisfied… I would use that every time."</div>
+          <div class="quote-card__from">Buyer, concierge interview</div>
+          <div class="quote-card__type">Signal of trust</div>
+        </div>
+      </div>
+
+      <div class="research-stats">
+        <div class="research-stat">
+          <div class="research-stat__val">~20%</div>
+          <div class="research-stat__label">Laundry providers experience ghosted payments</div>
+        </div>
+        <div class="research-stat">
+          <div class="research-stat__val">₦5k+</div>
+          <div class="research-stat__label">Avg. price point with consistent trust pain</div>
+        </div>
+        <div class="research-stat">
+          <div class="research-stat__val">&lt;5 min</div>
+          <div class="research-stat__label">Required payout speed for provider adoption</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FINAL CTA ============ -->
+  <section class="section cta-section" id="waitlist">
+    <div class="container cta-section__inner">
+      <div class="cta-section__glow"></div>
+      <div class="section__tag" style="text-align:center;">Join the Pilot</div>
+      <h2 class="section__title text-center">Be first in your neighborhood.<br><span class="gradient-text">Shape how this works.</span></h2>
+      <p class="section__sub text-center" style="max-width:520px;margin:0 auto 32px;">
+        Sign up now. Your job type, price preference, and fee feedback directly decides how LocaLe launches. Free for the first 200.
+      </p>
+      <div class="cta-section__btns">
+        <button class="btn-cta btn-cta--lg pulse" onclick="openModal('cta')">
+          🚀 Join Waitlist — It's Free
+        </button>
+        <a class="btn-whatsapp" href="https://wa.me/2348000000000?text=Hi!%20I'm%20interested%20in%20LocaLe%20-%20the%20escrow%20service%20for%20neighborhood%20jobs." target="_blank" rel="noopener">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Chat on WhatsApp
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__logo">LocaLe</div>
+      <p class="footer__tagline">Trusted neighborhood services. Escrow-protected.</p>
+      <p class="footer__copy">© 2026 LocaLe. Built in Ihiagwa, FUTO. 🇳🇬</p>
+    </div>
+  </footer>
+
+  <!-- ============ WAITLIST MODAL ============ -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal" id="modal">
+      <button class="modal__close" onclick="closeModal(null)" aria-label="Close">✕</button>
+
+      <div class="modal__header">
+        <div class="modal__emoji">🚀</div>
+        <h2 class="modal__title">Join the Pilot</h2>
+        <p class="modal__sub">First 200 get free access. Your answers shape the product.</p>
+      </div>
+
+      <!-- Success state -->
+      <div class="modal__success" id="modalSuccess" style="display:none;">
+        <div class="modal__success-icon">🎉</div>
+        <h3>You're on the list!</h3>
+        <p>We'll contact you on WhatsApp when the pilot goes live in your area. Keep an eye out.</p>
+        <button class="btn-cta btn-cta--lg" style="margin-top:24px;" onclick="shareOnWhatsApp()">📤 Share with a friend</button>
+      </div>
+
+      <!-- Form state -->
+      <form class="modal__form" id="waitlistForm" onsubmit="submitForm(event)">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <input type="text" class="form-input" name="name" placeholder="e.g. Chukwuemeka Obi" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">WhatsApp Number *</label>
+            <input type="tel" class="form-input" name="phone" placeholder="e.g. 08012345678" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Neighborhood / Estate *</label>
+            <input type="text" class="form-input" name="neighborhood" placeholder="e.g. Ihiagwa, near FUTO" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">I am joining as *</label>
+            <select class="form-input" name="role" required>
+              <option value="">Select role</option>
+              <option value="Buyer">🛒 Buyer (I need services done)</option>
+              <option value="Provider">🔧 Provider (I offer services)</option>
+              <option value="Both">Both</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Job type I care about most *</label>
+          <select class="form-input" name="jobType" required>
+            <option value="">Select job type</option>
+            <option>Laundry & Ironing</option>
+            <option>Room Cleaning</option>
+            <option>Phone / Laptop Repair</option>
+            <option>Generator Repair</option>
+            <option>Errands & Delivery</option>
+            <option>Home Barbing / Hair</option>
+            <option>Tutoring</option>
+            <option>Electrical Work</option>
+            <option>Small Moving / Carrying</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Typical price range for this job</label>
+          <select class="form-input" name="priceRange">
+            <option value="">Select price range</option>
+            <option>Under ₦1,000</option>
+            <option>₦1,000 – ₦3,000</option>
+            <option>₦3,000 – ₦5,000</option>
+            <option>₦5,000 – ₦10,000</option>
+            <option>Over ₦10,000</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Which fee feels fair for escrow protection? *</label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" name="feePref" value="₦100 flat fee" required>
+              <span class="radio-label">₦100 flat per booking</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="feePref" value="3% of job value">
+              <span class="radio-label">3% of job value</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="feePref" value="Free during pilot">
+              <span class="radio-label">Free during pilot only</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="feePref" value="Nothing - no fee">
+              <span class="radio-label">Nothing — I won't pay a fee</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Biggest fear about using an app like this?</label>
+          <select class="form-input" name="biggestFear">
+            <option value="">Select (optional)</option>
+            <option>Being scammed / losing my money</option>
+            <option>Provider not getting paid quickly</option>
+            <option>App crashing during payment</option>
+            <option>Job not being done well</option>
+            <option>Privacy / sharing personal info</option>
+            <option>None — I'd use it right away</option>
+          </select>
+        </div>
+
+        <!-- Hidden tracking fields -->
+        <input type="hidden" name="utmSource" id="utmSource">
+        <input type="hidden" name="utmMedium" id="utmMedium">
+        <input type="hidden" name="utmCampaign" id="utmCampaign">
+        <input type="hidden" name="location" id="locationField">
+        <input type="hidden" name="signupTimestamp" id="signupTimestamp">
+        <input type="hidden" name="openedFrom" id="openedFrom">
+
+        <button type="submit" class="btn-cta btn-cta--lg" id="submitBtn" style="width:100%;margin-top:8px;">
+          <span id="submitLabel">🚀 Secure My Spot</span>
+          <span id="submitLoader" style="display:none;">⏳ Submitting...</span>
+        </button>
+
+        <p class="modal__disclaimer">We'll only contact you via WhatsApp. No spam. Ever.</p>
+      </form>
+
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0D1117">
+  <title>LocaLe — Funds Secured</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <header class="top-bar">
+      <div class="top-bar__logo">LocaLe</div>
+      <div class="top-bar__actions">
+        <button class="top-bar__icon">🔔</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <!-- Big Trust Badge -->
+      <div class="trust-banner" style="margin-top: var(--space-md);">
+        <div class="trust-banner__icon">✅</div>
+        <div class="trust-banner__text">Payment is Secured</div>
+        <div class="trust-banner__sub">Provider has been notified and can start the job.</div>
+      </div>
+
+      <!-- Status Badge -->
+      <div class="text-center mb-lg">
+        <span class="status-badge status-badge--secured">🔒 Funds Secured</span>
+      </div>
+
+      <!-- Escrow Reference -->
+      <div class="text-center mb-lg">
+        <div class="escrow-ref">
+          <span>Escrow Ref:</span>
+          <strong data-bind="escrowRef">LCL-0001</strong>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="timeline">
+        <div class="timeline__step timeline__step--done">
+          <div class="timeline__dot"></div>
+          <div class="timeline__title">Booked</div>
+          <div class="timeline__time">Job posted and confirmed</div>
+        </div>
+        <div class="timeline__step timeline__step--done">
+          <div class="timeline__dot"></div>
+          <div class="timeline__title">Funds Secured</div>
+          <div class="timeline__time">Payment held in escrow</div>
+        </div>
+        <div class="timeline__step timeline__step--active">
+          <div class="timeline__dot"></div>
+          <div class="timeline__title">In Progress</div>
+          <div class="timeline__time">Provider is working on your job</div>
+        </div>
+        <div class="timeline__step timeline__step--pending">
+          <div class="timeline__dot"></div>
+          <div class="timeline__title">Job Done</div>
+          <div class="timeline__time">Waiting for completion</div>
+        </div>
+        <div class="timeline__step timeline__step--pending">
+          <div class="timeline__dot"></div>
+          <div class="timeline__title">Release</div>
+          <div class="timeline__time">QR scan to release payment</div>
+        </div>
+      </div>
+
+      <!-- Job Summary -->
+      <div class="card" style="cursor: default;">
+        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: var(--space-sm);">Job Summary</div>
+        <div class="transfer-details__row">
+          <span class="transfer-details__label">Provider</span>
+          <span class="transfer-details__value" data-bind="providerName">Chidi Okeke</span>
+        </div>
+        <div class="transfer-details__row">
+          <span class="transfer-details__label">Amount Held</span>
+          <span class="transfer-details__value text-green" data-bind="price">₦5,000</span>
+        </div>
+        <div class="transfer-details__row">
+          <span class="transfer-details__label">Security Fee</span>
+          <span class="transfer-details__value" data-bind="fee">₦100</span>
+        </div>
+      </div>
+
+      <div class="info-text mt-lg">
+        🔐 Your money is safe. The provider gets paid <strong>instantly</strong> after you verify completion with a QR scan.
+      </div>
+
+      <div class="info-text info-text--amber mt-md">
+        📍 Offline-friendly: The QR verification code works even with weak network.
+      </div>
+
+    </main>
+
+    <!-- Floating Action -->
+    <div class="action-area">
+      <a href="release.html" class="btn btn--primary">
+        ✓ Mark Job as Done
+      </a>
+      <a href="dispute.html" class="btn btn--danger mt-sm" style="font-size: 0.85rem;">
+        ⚠️ Report a Problem
+      </a>
+    </div>
+
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

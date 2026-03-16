@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0D1117">
+  <title>LocaLe — Job Details</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <header class="top-bar">
+      <div class="top-bar__logo">LocaLe</div>
+      <div class="top-bar__actions">
+        <button class="top-bar__icon">🔔</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <a href="index.html" class="back-btn">← Back</a>
+
+      <h1 class="page-title">Job Details</h1>
+      <p class="page-subtitle">Tell us what you need done. We'll match you with trusted providers nearby.</p>
+
+      <!-- Location -->
+      <div class="form-group">
+        <label class="form-label">📍 Location</label>
+        <input type="text" class="form-input" value="Ihiagwa, near FUTO gate" readonly style="opacity: 0.7;">
+        <div style="font-size: 0.75rem; color: var(--green-primary); margin-top: 4px;">✓ Auto-detected</div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label class="form-label">📝 What do you need?</label>
+        <textarea class="form-input" placeholder="e.g. Wash and iron 10 shirts, 3 trousers. Pickup from Room 204, Hostel B."></textarea>
+      </div>
+
+      <!-- Preferred Time -->
+      <div class="form-group">
+        <label class="form-label">🕐 Preferred time</label>
+        <select class="form-input">
+          <option>As soon as possible</option>
+          <option>Within 2 hours</option>
+          <option>Today evening</option>
+          <option>Tomorrow morning</option>
+        </select>
+      </div>
+
+      <!-- Price -->
+      <div class="form-group">
+        <label class="form-label">💰 Budget</label>
+        <div class="price-grid">
+          <button class="price-option" onclick="selectPrice(3000, this)" id="price-3k">
+            <span class="price-option__amount">₦3,000</span>
+            <span class="price-option__label">Budget</span>
+          </button>
+          <button class="price-option active" onclick="selectPrice(5000, this)" id="price-5k">
+            <span class="price-option__amount">₦5,000</span>
+            <span class="price-option__label">Standard</span>
+          </button>
+          <button class="price-option" onclick="selectPrice(10000, this)" id="price-10k">
+            <span class="price-option__amount">₦10,000</span>
+            <span class="price-option__label">Premium</span>
+          </button>
+        </div>
+        <input type="text" class="form-input" placeholder="Or enter custom amount (₦)" style="margin-top: 4px;">
+      </div>
+
+      <div class="info-text">
+        💡 This amount will be held in escrow. The provider only receives payment after you verify the job with a QR scan.
+      </div>
+
+    </main>
+
+    <!-- Floating Action -->
+    <div class="action-area">
+      <a href="provider.html" class="btn btn--primary" onclick="setState({selectedPrice: document.querySelector('.price-option.active .price-option__amount')?.textContent.replace('₦','').replace(',','') || 5000})">
+        Continue →
+      </a>
+    </div>
+
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

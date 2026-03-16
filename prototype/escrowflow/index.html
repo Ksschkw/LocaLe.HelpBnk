@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0D1117">
+  <meta name="description" content="LocaLe — Trusted neighborhood services with escrow protection">
+  <title>LocaLe — Home</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <div class="top-bar__logo">LocaLe</div>
+      <div class="top-bar__actions">
+        <button class="top-bar__icon" aria-label="Notifications">🔔</button>
+        <button class="top-bar__icon" aria-label="Profile">👤</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <!-- Add to Home Screen Banner -->
+      <div class="a2hs-banner" id="a2hsBanner">
+        <span class="a2hs-banner__icon">📲</span>
+        <span>Add LocaLe to your Home Screen for quick access</span>
+        <button class="a2hs-banner__close" onclick="closeBanner(this)" aria-label="Close">✕</button>
+      </div>
+
+      <!-- Hero Section -->
+      <h1 class="page-title">What do you need done?</h1>
+      <p class="page-subtitle">Trusted providers in your neighborhood. Your money is held safely until the job is confirmed done.</p>
+
+      <!-- Service Cards -->
+      <div class="service-grid">
+
+        <!-- Laundry -->
+        <a class="card service-card" onclick="selectService('laundry')" id="service-laundry">
+          <div class="card__icon">👕</div>
+          <div class="service-card__info">
+            <div class="card__title">Laundry / Wash & Iron</div>
+            <div class="card__desc">Pickup, wash, iron & deliver</div>
+            <div class="card__meta">
+              <span>₦2,000 – ₦5,000</span>
+              <span class="card__tag">Popular</span>
+            </div>
+          </div>
+          <span class="service-card__arrow">→</span>
+        </a>
+
+        <!-- Cleaning -->
+        <a class="card service-card" onclick="selectService('cleaning')" id="service-cleaning">
+          <div class="card__icon">🧹</div>
+          <div class="service-card__info">
+            <div class="card__title">Room Cleaning</div>
+            <div class="card__desc">Deep clean, mopping & arranging</div>
+            <div class="card__meta">
+              <span>₦3,000 – ₦8,000</span>
+            </div>
+          </div>
+          <span class="service-card__arrow">→</span>
+        </a>
+
+        <!-- Errand -->
+        <a class="card service-card" onclick="selectService('errand')" id="service-errand">
+          <div class="card__icon">📦</div>
+          <div class="service-card__info">
+            <div class="card__title">Errand / Pickup & Delivery</div>
+            <div class="card__desc">Buy, pick up or deliver items nearby</div>
+            <div class="card__meta">
+              <span>₦500 – ₦3,000</span>
+              <span class="card__tag">Quick</span>
+            </div>
+          </div>
+          <span class="service-card__arrow">→</span>
+        </a>
+
+        <!-- Phone Repair -->
+        <a class="card service-card" onclick="selectService('repair')" id="service-repair">
+          <div class="card__icon">📱</div>
+          <div class="service-card__info">
+            <div class="card__title">Phone / Laptop Repair</div>
+            <div class="card__desc">Screen fix, battery, charging port</div>
+            <div class="card__meta">
+              <span>₦3,000 – ₦15,000</span>
+              <span class="card__tag">Escrow protected</span>
+            </div>
+          </div>
+          <span class="service-card__arrow">→</span>
+        </a>
+
+        <!-- Generator Repair -->
+        <a class="card service-card" onclick="selectService('generator')" id="service-generator">
+          <div class="card__icon">⚡</div>
+          <div class="service-card__info">
+            <div class="card__title">Generator Repair</div>
+            <div class="card__desc">Minor fixes, servicing & maintenance</div>
+            <div class="card__meta">
+              <span>₦2,000 – ₦10,000</span>
+            </div>
+          </div>
+          <span class="service-card__arrow">→</span>
+        </a>
+
+      </div>
+
+      <div class="info-text mt-lg">
+        🛡️ All transactions are escrow-protected. Provider gets paid only after you verify the job is done via QR scan.
+      </div>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

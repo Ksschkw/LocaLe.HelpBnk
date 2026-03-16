@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0D1117">
+  <title>LocaLe — Dispute</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <header class="top-bar">
+      <div class="top-bar__logo">LocaLe</div>
+      <div class="top-bar__actions">
+        <button class="top-bar__icon">🔔</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <a href="status.html" class="back-btn">← Back to status</a>
+
+      <!-- Dispute Status -->
+      <div class="status-display">
+        <div class="status-display__icon">⚠️</div>
+        <div class="status-display__title text-amber">Funds On Hold</div>
+        <div class="status-display__desc">
+          A problem has been reported. Your funds are safely held while our support team reviews the issue.
+        </div>
+      </div>
+
+      <!-- Status Badge -->
+      <div class="text-center mb-lg">
+        <span class="status-badge status-badge--hold">🔒 Under Review</span>
+      </div>
+
+      <!-- Details -->
+      <div class="card" style="cursor: default;">
+        <div class="card__title" style="margin-bottom: var(--space-md);">What happens now:</div>
+        <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 2;">
+          <div>1️⃣ &nbsp; Your funds remain locked — no one can access them</div>
+          <div>2️⃣ &nbsp; Support reviews both sides within 24 hours</div>
+          <div>3️⃣ &nbsp; Resolution: full refund, partial release, or full release</div>
+        </div>
+      </div>
+
+      <!-- Dispute Form -->
+      <div class="form-group mt-lg">
+        <label class="form-label">📝 Describe the issue</label>
+        <textarea class="form-input" placeholder="e.g. Job not completed, items damaged, provider didn't show up..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">📷 Add evidence (optional)</label>
+        <div class="card" style="text-align: center; cursor: pointer; padding: var(--space-xl);">
+          <div style="font-size: 2rem; margin-bottom: var(--space-sm);">📸</div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">Tap to upload photos</div>
+        </div>
+      </div>
+
+      <div class="info-text">
+        🛡️ Your money is 100% protected. Disputes are resolved within 24 hours with full transparency.
+      </div>
+
+      <div class="info-text info-text--amber mt-md">
+        📞 Need urgent help? Contact support: <strong>support@locale.ng</strong>
+      </div>
+
+    </main>
+
+    <!-- Floating Action -->
+    <div class="action-area">
+      <button class="btn btn--primary" onclick="alert('Dispute submitted! Support will contact you within 24 hours.')">
+        📩 Submit Dispute
+      </button>
+      <a href="status.html" class="btn btn--secondary mt-sm" style="font-size: 0.85rem;">
+        Cancel — go back
+      </a>
+    </div>
+
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

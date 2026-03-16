@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0D1117">
+  <title>LocaLe — Payment Released</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <header class="top-bar">
+      <div class="top-bar__logo">LocaLe</div>
+      <div class="top-bar__actions">
+        <button class="top-bar__icon">🔔</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <!-- Success Animation -->
+      <div class="success-checkmark" style="margin-top: var(--space-xl);">
+        ✓
+      </div>
+
+      <h1 class="page-title text-center text-green">Payment Released!</h1>
+      <p class="page-subtitle text-center">Funds have been sent to the provider. Transaction complete.</p>
+
+      <!-- Receipt -->
+      <div class="receipt">
+        <div class="receipt__header">
+          <div class="receipt__icon">🧾</div>
+          <div class="receipt__title">Transaction Receipt</div>
+        </div>
+        <div class="receipt__row">
+          <span class="receipt__label">Job ID</span>
+          <span class="receipt__value" data-bind="escrowRef">LCL-0001</span>
+        </div>
+        <div class="receipt__row">
+          <span class="receipt__label">Provider</span>
+          <span class="receipt__value" data-bind="providerName">Chidi Okeke</span>
+        </div>
+        <div class="receipt__row">
+          <span class="receipt__label">Job Amount</span>
+          <span class="receipt__value" data-bind="price">₦5,000</span>
+        </div>
+        <div class="receipt__row">
+          <span class="receipt__label">Security Fee</span>
+          <span class="receipt__value" data-bind="fee">₦100</span>
+        </div>
+        <div class="receipt__row receipt__total">
+          <span class="receipt__label fw-600">Total</span>
+          <span class="receipt__value" data-bind="total">₦5,100</span>
+        </div>
+        <div class="receipt__row">
+          <span class="receipt__label">Time</span>
+          <span class="receipt__value" data-bind="time">--:--</span>
+        </div>
+        <div class="receipt__row">
+          <span class="receipt__label">Date</span>
+          <span class="receipt__value" data-bind="date">-- --- ----</span>
+        </div>
+        <div class="receipt__row">
+          <span class="receipt__label">Status</span>
+          <span class="status-badge status-badge--success">✓ Complete</span>
+        </div>
+      </div>
+
+      <div class="info-text mt-lg">
+        💚 Provider gets paid in under 5 minutes. Keep this receipt for your records.
+      </div>
+
+      <!-- Rating (optional UX touch) -->
+      <div class="card mt-lg" style="cursor: default; text-align: center;">
+        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: var(--space-sm);">How was the service?</div>
+        <div style="font-size: 2rem; letter-spacing: 8px; cursor: pointer;" id="ratingStars">
+          <span onclick="rate(1)">☆</span><span onclick="rate(2)">☆</span><span onclick="rate(3)">☆</span><span onclick="rate(4)">☆</span><span onclick="rate(5)">☆</span>
+        </div>
+        <div id="ratingMsg" style="font-size: 0.8rem; color: var(--green-primary); margin-top: 8px; display: none;">Thanks for rating!</div>
+      </div>
+
+    </main>
+
+    <!-- Floating Action -->
+    <div class="action-area">
+      <a href="index.html" class="btn btn--primary">
+        🏠 Done — Back to Home
+      </a>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    function rate(n) {
+      const stars = document.getElementById('ratingStars');
+      const spans = stars.querySelectorAll('span');
+      spans.forEach((s, i) => {
+        s.textContent = i < n ? '★' : '☆';
+        s.style.color = i < n ? 'var(--amber-primary)' : '';
+      });
+      document.getElementById('ratingMsg').style.display = 'block';
+    }
+  </script>
+</body>
+</html>

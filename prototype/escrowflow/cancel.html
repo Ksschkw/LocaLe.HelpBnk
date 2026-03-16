@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0D1117">
+  <title>LocaLe — Booking Cancelled</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <header class="top-bar">
+      <div class="top-bar__logo">LocaLe</div>
+      <div class="top-bar__actions">
+        <button class="top-bar__icon">🔔</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <!-- Cancel Status -->
+      <div class="status-display" style="margin-top: var(--space-lg);">
+        <div class="status-display__icon">❌</div>
+        <div class="status-display__title text-red">Booking Cancelled</div>
+        <div class="status-display__desc">
+          Your booking has been cancelled. Funds will be returned to your account.
+        </div>
+      </div>
+
+      <!-- Status Badge -->
+      <div class="text-center mb-lg">
+        <span class="status-badge status-badge--cancelled">↩️ Funds Returning</span>
+      </div>
+
+      <!-- Refund Timeline -->
+      <div class="timeline">
+        <div class="timeline__step timeline__step--done">
+          <div class="timeline__dot"></div>
+          <div class="timeline__title">Cancellation Requested</div>
+          <div class="timeline__time">Just now</div>
+        </div>
+        <div class="timeline__step timeline__step--active">
+          <div class="timeline__dot"></div>
+          <div class="timeline__title">Processing Refund</div>
+          <div class="timeline__time">Estimated: 1–2 hours</div>
+        </div>
+        <div class="timeline__step timeline__step--pending">
+          <div class="timeline__dot"></div>
+          <div class="timeline__title">Funds Returned</div>
+          <div class="timeline__time">Back to your account</div>
+        </div>
+      </div>
+
+      <!-- Refund Details -->
+      <div class="card" style="cursor: default;">
+        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: var(--space-md);">Refund Details</div>
+        <div class="transfer-details__row">
+          <span class="transfer-details__label">Escrow Ref</span>
+          <span class="transfer-details__value" data-bind="escrowRef">LCL-0001</span>
+        </div>
+        <div class="transfer-details__row">
+          <span class="transfer-details__label">Amount</span>
+          <span class="transfer-details__value" data-bind="price">₦5,000</span>
+        </div>
+        <div class="transfer-details__row">
+          <span class="transfer-details__label">Security Fee</span>
+          <span class="transfer-details__value">₦0 (waived)</span>
+        </div>
+        <div class="transfer-details__row">
+          <span class="transfer-details__label">Refund Method</span>
+          <span class="transfer-details__value">Same payment method</span>
+        </div>
+        <div class="transfer-details__row">
+          <span class="transfer-details__label">Estimated Time</span>
+          <span class="transfer-details__value">1–2 hours</span>
+        </div>
+      </div>
+
+      <div class="info-text mt-lg">
+        🛡️ Cancellations before job start get a <strong>full refund</strong> including the security fee. No money is lost.
+      </div>
+
+    </main>
+
+    <!-- Floating Action -->
+    <div class="action-area">
+      <a href="index.html" class="btn btn--primary">
+        🏠 Back to Home
+      </a>
+    </div>
+
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

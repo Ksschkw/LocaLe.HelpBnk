@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0D1117">
+  <title>LocaLe — Scan QR</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <header class="top-bar">
+      <div class="top-bar__logo">LocaLe</div>
+      <div class="top-bar__actions">
+        <button class="top-bar__icon">🔔</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <a href="release.html" class="back-btn">← Back</a>
+
+      <h1 class="page-title text-center">Scan Provider's QR</h1>
+      <p class="page-subtitle text-center">Point your camera at the provider's QR code to verify and release payment.</p>
+
+      <!-- Scanner Viewport -->
+      <div class="scanner-viewport">
+        <div class="scanner-viewport__line"></div>
+        <div class="scanner-viewport__corners"></div>
+        <div class="scanner-viewport__corners scanner-corners-bottom"></div>
+        <div style="font-size: 2.5rem; opacity: 0.3;">📷</div>
+      </div>
+
+      <div class="scanner-text">
+        Scanning... Point at the QR code
+      </div>
+
+      <!-- Manual entry fallback -->
+      <div class="divider"></div>
+
+      <div class="text-center mb-md" style="font-size: 0.85rem; color: var(--text-muted);">
+        Or enter the 6-digit backup code
+      </div>
+
+      <div class="form-group">
+        <input type="text" class="form-input text-center" id="codeInput" 
+               placeholder="Enter 6-digit code" 
+               maxlength="6" 
+               inputmode="numeric"
+               style="text-align: center; font-size: 1.5rem; letter-spacing: 8px; font-weight: 700;">
+        <div id="codeError" style="display: none; color: var(--red-primary); font-size: 0.85rem; margin-top: 8px; text-align: center;"></div>
+        <div id="codeSuccess" style="display: none; color: var(--green-primary); font-size: 0.85rem; margin-top: 8px; text-align: center;"></div>
+      </div>
+
+      <div class="info-text">
+        💡 Ask the provider for the 6-digit backup code if QR scanning doesn't work. Code: <strong>works even with weak network</strong>.
+      </div>
+
+    </main>
+
+    <!-- Floating Action -->
+    <div class="action-area">
+      <a href="confirm.html" class="btn btn--primary" id="scanSuccessBtn">
+        ✓ I Scanned Successfully
+      </a>
+      <button class="btn btn--secondary mt-sm" onclick="verifyCode()" style="font-size: 0.85rem;">
+        Verify Code Instead
+      </button>
+    </div>
+
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

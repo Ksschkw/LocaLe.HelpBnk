@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0D1117">
+  <title>LocaLe — Choose Provider</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <header class="top-bar">
+      <div class="top-bar__logo">LocaLe</div>
+      <div class="top-bar__actions">
+        <button class="top-bar__icon">🔔</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <a href="job.html" class="back-btn">← Back</a>
+
+      <h1 class="page-title">Choose a Provider</h1>
+      <p class="page-subtitle">These providers are nearby and vouched by people in your area.</p>
+
+      <!-- Provider 1 -->
+      <div class="card provider-card" onclick="selectProvider(1, this)" id="provider-1">
+        <div class="provider-avatar">CO</div>
+        <div class="provider-info">
+          <div class="provider-info__name">Chidi Okeke</div>
+          <div class="provider-info__details">
+            <span>📍 0.3 km</span>
+            <span><span class="star">★</span> 4.8 (23)</span>
+          </div>
+          <div class="provider-info__vouch">✓ Vouched by Emeka A.</div>
+        </div>
+        <span class="card__tag">Fast</span>
+      </div>
+
+      <!-- Provider 2 -->
+      <div class="card provider-card" onclick="selectProvider(2, this)" id="provider-2">
+        <div class="provider-avatar" style="background: linear-gradient(135deg, #FFB300, #FF6D00);">AE</div>
+        <div class="provider-info">
+          <div class="provider-info__name">Amara Eze</div>
+          <div class="provider-info__details">
+            <span>📍 0.7 km</span>
+            <span><span class="star">★</span> 4.6 (15)</span>
+          </div>
+          <div class="provider-info__vouch">✓ Vouched by Kelechi N.</div>
+        </div>
+        <span class="card__tag" style="background: var(--amber-glow); color: var(--amber-primary);">Rated</span>
+      </div>
+
+      <!-- Provider 3 -->
+      <div class="card provider-card" onclick="selectProvider(3, this)" id="provider-3">
+        <div class="provider-avatar" style="background: linear-gradient(135deg, #448AFF, #7C4DFF);">TB</div>
+        <div class="provider-info">
+          <div class="provider-info__name">Tunde Balogun</div>
+          <div class="provider-info__details">
+            <span>📍 1.2 km</span>
+            <span><span class="star">★</span> 4.9 (41)</span>
+          </div>
+          <div class="provider-info__vouch">✓ Vouched by Ifeanyi O.</div>
+        </div>
+        <span class="card__tag" style="background: var(--blue-glow); color: var(--blue-primary);">Top</span>
+      </div>
+
+      <div class="info-text mt-lg">
+        🛡️ All providers are escrow-protected. You pay only when satisfied — verified via QR scan.
+      </div>
+
+    </main>
+
+    <!-- Floating Action -->
+    <div class="action-area">
+      <a href="checkout.html" class="btn btn--primary" style="opacity: 0.5; pointer-events: none;" id="selectProviderBtn">
+        Select Provider →
+      </a>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // Auto-enable button if coming back with a selection
+    document.addEventListener('DOMContentLoaded', () => {
+      const state = getState();
+      if (state.selectedProvider) {
+        const btn = document.getElementById('selectProviderBtn');
+        if (btn) {
+          btn.style.opacity = '1';
+          btn.style.pointerEvents = 'auto';
+        }
+      }
+    });
+  </script>
+</body>
+</html>

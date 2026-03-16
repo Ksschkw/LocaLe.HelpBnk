@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LocaLe — Escrow Flow Prototype Walkthrough</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Walkthrough-specific print overrides */
+    @media print {
+      body {
+        background: white !important;
+        color: #1a1a1a !important;
+        font-size: 11pt !important;
+      }
+      .walkthrough-page {
+        page-break-after: always;
+        max-width: 100%;
+        padding: 32px 24px;
+      }
+      .walkthrough-page:last-child {
+        page-break-after: auto;
+      }
+      .walkthrough-title, .walkthrough-section-title, .walkthrough-step__title {
+        color: #0D1117 !important;
+        -webkit-text-fill-color: #0D1117 !important;
+      }
+      .walkthrough-subtitle, .walkthrough-step__desc {
+        color: #444 !important;
+      }
+      .walkthrough-step__number {
+        background: #0D1117 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .walkthrough-insight {
+        background: #f5f5f5 !important;
+        border-left-color: #0D1117 !important;
+      }
+      .walkthrough-table th {
+        background: #eee !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .walkthrough-cover-logo {
+        color: #0D1117 !important;
+        -webkit-text-fill-color: #0D1117 !important;
+      }
+      .no-print { display: none !important; }
+    }
+
+    /* On-screen styling */
+    body { background: var(--bg-primary); }
+    .walkthrough-container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .walkthrough-cover {
+      text-align: center;
+      padding: 80px 24px;
+    }
+    .walkthrough-cover-logo {
+      font-size: 3rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--green-primary), #66FF99);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    .walkthrough-cover-tagline {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+    }
+    .walkthrough-cover-milestone {
+      display: inline-block;
+      padding: 8px 24px;
+      background: var(--green-soft);
+      border: 1px solid rgba(0, 200, 83, 0.2);
+      border-radius: var(--radius-full);
+      color: var(--green-primary);
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 32px;
+    }
+    .walkthrough-links {
+      margin-top: 32px;
+      text-align: left;
+      display: inline-block;
+    }
+    .walkthrough-links a {
+      display: block;
+      color: var(--blue-primary);
+      text-decoration: none;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+    .walkthrough-links a:hover { text-decoration: underline; }
+    .walkthrough-link-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .walkthrough-link-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      min-width: 120px;
+    }
+    .walkthrough-link-value {
+      font-size: 0.9rem;
+      color: var(--blue-primary);
+      word-break: break-all;
+    }
+    .print-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 24px;
+      background: var(--green-primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow-button);
+      z-index: 100;
+    }
+    .print-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(0, 200, 83, 0.4);
+    }
+    .walkthrough-flow-diagram {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+      margin: 24px 0;
+      font-size: 0.8rem;
+    }
+    .flow-step {
+      padding: 6px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--bg-glass-border);
+      border-radius: var(--radius-sm);
+      font-weight: 500;
+    }
+    .flow-arrow {
+      color: var(--green-primary);
+      font-weight: 700;
+    }
+    @media print {
+      .flow-step {
+        background: #f0f0f0 !important;
+        border-color: #ccc !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+    }
+    .screen-embed {
+      border: 2px solid var(--bg-glass-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 16px 0;
+    }
+    .screen-embed iframe {
+      width: 100%;
+      height: 650px;
+      border: none;
+      vertical-align: bottom; /* Removes mysterious bottom gap */
+    }
+    @media print {
+      .screen-embed {
+        display: block !important;
+        page-break-inside: avoid;
+        border: 2px solid #ddd;
+        /* Let iframe dictate height in print */
+        height: auto !important; 
+        overflow: visible !important;
+      }
+      .screen-embed iframe {
+        /* JS will set the exact pixel height inline */
+      }
+      .print-screenshot-placeholder {
+        display: none !important;
+      }
+    }
+    .print-screenshot-placeholder { display: none; }
+  </style>
+</head>
+<body>
+  <div class="walkthrough-container">
+
+    <!-- ============================
+         PAGE 1: COVER
+         ============================ -->
+    <div class="walkthrough-page walkthrough-cover">
+      <div class="walkthrough-cover-logo">LocaLe</div>
+      <div class="walkthrough-cover-tagline">Trusted Neighborhood Services with Escrow Protection</div>
+      <div class="walkthrough-cover-milestone">Milestone 3 — Clickable Prototype of Escrow Flow (End-to-End)</div>
+      
+      <div style="margin-top: 40px;">
+        <p style="font-size: 1rem; color: var(--text-secondary); max-width: 500px; margin: 0 auto; line-height: 1.7;">
+          A mobile-first web prototype demonstrating the complete escrow flow:
+          <strong>booking → funding hold → funds secured → QR code release → payment confirmation</strong>.
+          Tested with real users in the Ihiagwa/Eziobodo (FUTO) area.
+        </p>
+      </div>
+
+      <!-- <div style="margin-top: 40px;">
+        <div class="walkthrough-link-row" style="justify-content: center;">
+          <span class="walkthrough-link-label">🔗 Prototype URL:</span>
+          <span class="walkthrough-link-value">[Your hosted URL here]</span>
+        </div>
+        <div class="walkthrough-link-row" style="justify-content: center;">
+          <span class="walkthrough-link-label">🎥 Video Demo:</span>
+          <span class="walkthrough-link-value">[Video link if available]</span>
+        </div>
+      </div> -->
+
+      <div style="margin-top: 40px; font-size: 0.85rem; color: var(--text-muted);">
+        Submission Date: <span id="submissionDate"></span>
+      </div>
+    </div>
+
+    <!-- ============================
+         PAGE 2: FLOW OVERVIEW
+         ============================ -->
+    <div class="walkthrough-page">
+      <h2 class="walkthrough-section-title">Escrow Flow Overview</h2>
+      <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.6;">
+        The LocaLe escrow flow ensures trust between buyers and service providers. Money is held until the buyer verifies job completion via QR scan. The provider gets paid instantly after verification.
+      </p>
+
+      <div class="walkthrough-flow-diagram">
+        <span class="flow-step">📋 Booking</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">🔒 Fund & Hold</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">✅ Funds Secured</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">📱 QR Release</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">📷 Buyer Scans</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">✓ Confirm</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">💚 Payment Done</span>
+      </div>
+
+      <div style="margin-top: 24px;">
+        <strong style="font-size: 0.9rem;">Release authorization:</strong>
+        <span style="font-size: 0.85rem; color: var(--text-secondary);">Buyer scans Provider's QR, then confirms release. Provider gets paid in under 5 minutes.</span>
+      </div>
+
+      <div style="margin-top: 16px;">
+        <strong style="font-size: 0.9rem;">Edge cases handled:</strong>
+        <span style="font-size: 0.85rem; color: var(--text-secondary);">Cancellation (full refund before job start) and Dispute (funds held, support reviews within 24h).</span>
+      </div>
+    </div>
+
+    <!-- ============================
+         PAGE 3: STEP 1 — BOOKING
+         ============================ -->
+    <div class="walkthrough-page">
+      <h2 class="walkthrough-section-title">Step 1: Choose a Service</h2>
+      <div class="walkthrough-step">
+        <div class="walkthrough-step__number">1</div>
+        <div class="walkthrough-step__content">
+          <div class="walkthrough-step__title">Home Screen — Service Selection</div>
+          <div class="walkthrough-step__desc">
+            User lands on the home screen and sees available services: Laundry, Room Cleaning, Errand/Delivery, Phone Repair, Generator Repair. Each card shows price range and a trust indicator. A banner reminds users to "Add to Home Screen" for PWA experience.
+          </div>
+        </div>
+      </div>
+      <div class="print-screenshot-placeholder">[Screenshot: Home page — index.html]</div>
+      <div class="screen-embed">
+        <iframe src="index.html" title="Home page"></iframe>
+      </div>
+
+      <div class="walkthrough-step" style="margin-top: 24px;">
+        <div class="walkthrough-step__number">2</div>
+        <div class="walkthrough-step__content">
+          <div class="walkthrough-step__title">Job Details + Price Selection</div>
+          <div class="walkthrough-step__desc">
+            User enters job details: auto-detected location, description, preferred time, and budget (₦3,000 / ₦5,000 / ₦10,000 or custom). Clear messaging: <em>"This amount will be held in escrow."</em>
+          </div>
+        </div>
+      </div>
+      <div class="print-screenshot-placeholder">[Screenshot: Job page — job.html]</div>
+      <div class="screen-embed">
+        <iframe src="job.html" title="Job details"></iframe>
+      </div>
+    </div>
+
+    <!-- ============================
+         PAGE 4: STEP 2 — PROVIDER + CHECKOUT
+         ============================ -->
+    <div class="walkthrough-page">
+      <h2 class="walkthrough-section-title">Step 2: Choose Provider & Fund Escrow</h2>
+      <div class="walkthrough-step">
+        <div class="walkthrough-step__number">3</div>
+        <div class="walkthrough-step__content">
+          <div class="walkthrough-step__title">Select a Provider</div>
+          <div class="walkthrough-step__desc">
+            2–3 verified provider cards with: name, distance, rating, review count, and "Vouched by [neighbor name]". Social proof builds trust before the financial step.
+          </div>
+        </div>
+      </div>
+      <div class="print-screenshot-placeholder">[Screenshot: Provider selection — provider.html]</div>
+      <div class="screen-embed">
+        <iframe src="provider.html" title="Provider selection"></iframe>
+      </div>
+
+      <div class="walkthrough-step" style="margin-top: 24px;">
+        <div class="walkthrough-step__number">4</div>
+        <div class="walkthrough-step__content">
+          <div class="walkthrough-step__title">Fund & Hold (Mock Payment)</div>
+          <div class="walkthrough-step__desc">
+            <strong>Key trust moment.</strong> Big banner: <em>"Your money is held safely until the job is confirmed done."</em> Default: Bank Transfer (most popular among students). Account details shown with copy buttons. Alternative: Card, USSD. Small print: <em>"Provider cannot receive payment until you scan to release."</em>
+          </div>
+        </div>
+      </div>
+      <div class="print-screenshot-placeholder">[Screenshot: Checkout — checkout.html]</div>
+      <div class="screen-embed">
+        <iframe src="checkout.html" title="Checkout"></iframe>
+      </div>
+    </div>
+
+    <!-- ============================
+         PAGE 5: STEP 3 — FUNDS SECURED
+         ============================ -->
+    <div class="walkthrough-page">
+      <h2 class="walkthrough-section-title">Step 3: Funds Secured Status</h2>
+      <div class="walkthrough-step">
+        <div class="walkthrough-step__number">5</div>
+        <div class="walkthrough-step__content">
+          <div class="walkthrough-step__title">"Funds Secured" — Clear Trust Message</div>
+          <div class="walkthrough-step__desc">
+            Big green badge: <em>"Payment is Secured. Provider has been notified."</em> Visual timeline shows progress: Booked → Funds Secured → In Progress → Job Done → Release. Shows escrow reference number (e.g., LCL-4821). Messaging: <em>"Provider gets paid instantly after you verify completion with a QR scan."</em> Note: <em>"Code works even with weak network."</em>
+          </div>
+        </div>
+      </div>
+      <div class="print-screenshot-placeholder">[Screenshot: Funds Secured — status.html]</div>
+      <div class="screen-embed">
+        <iframe src="status.html" title="Status"></iframe>
+      </div>
+
+      <div class="walkthrough-insight" style="margin-top: 24px;">
+        <strong>Why this screen matters:</strong> This is the #1 trust moment. Users need to believe their money is safe and understand the release mechanism. In testing, we measure whether users feel reassured or still anxious at this point.
+      </div>
+    </div>
+
+    <!-- ============================
+         PAGE 6: STEP 4 — QR RELEASE
+         ============================ -->
+    <div class="walkthrough-page">
+      <h2 class="walkthrough-section-title">Step 4: QR Code Release</h2>
+      <div class="walkthrough-step">
+        <div class="walkthrough-step__number">6</div>
+        <div class="walkthrough-step__content">
+          <div class="walkthrough-step__title">Provider Shows QR Code</div>
+          <div class="walkthrough-step__desc">
+            <strong>Provider's screen:</strong> Shows a one-time QR code + 6-digit backup code tied to this specific job. Message: <em>"Customer scans this QR after the job is complete."</em> QR expires in 10 minutes. Amount to receive shown clearly. Payout guarantee: <em>"Payment released in under 5 minutes."</em>
+          </div>
+        </div>
+      </div>
+      <div class="print-screenshot-placeholder">[Screenshot: Provider QR — provider-qr.html]</div>
+      <div class="screen-embed">
+        <iframe src="provider-qr.html" title="Provider QR"></iframe>
+      </div>
+
+      <div class="walkthrough-step" style="margin-top: 24px;">
+        <div class="walkthrough-step__number">7</div>
+        <div class="walkthrough-step__content">
+          <div class="walkthrough-step__title">Buyer Scans QR Code</div>
+          <div class="walkthrough-step__desc">
+            <strong>Buyer's screen:</strong> Camera viewfinder with scanning animation. Fallback: 6-digit backup code entry. The code is verified client-side (in the mock). If valid → proceeds to confirmation. If invalid → "Invalid code" error with retry.
+          </div>
+        </div>
+      </div>
+      <div class="print-screenshot-placeholder">[Screenshot: QR Scan — scan.html]</div>
+      <div class="screen-embed">
+        <iframe src="scan.html" title="Scan"></iframe>
+      </div>
+    </div>
+
+    <!-- ============================
+         PAGE 7: STEP 5 — CONFIRM + RECEIPT
+         ============================ -->
+    <div class="walkthrough-page">
+      <h2 class="walkthrough-section-title">Step 5: Confirm Release & Receipt</h2>
+      <div class="walkthrough-step">
+        <div class="walkthrough-step__number">8</div>
+        <div class="walkthrough-step__content">
+          <div class="walkthrough-step__title">Confirm Release</div>
+          <div class="walkthrough-step__desc">
+            Final confirmation: shows provider name, amount, and fee breakdown. <strong>Required checkbox:</strong> <em>"I confirm the job is complete and I'm satisfied."</em> Warning: <em>"After release, funds are sent instantly. This cannot be reversed."</em> The release button only activates after checkbox is checked.
+          </div>
+        </div>
+      </div>
+      <div class="print-screenshot-placeholder">[Screenshot: Confirm Release — confirm.html]</div>
+      <div class="screen-embed">
+        <iframe src="confirm.html" title="Confirm"></iframe>
+      </div>
+
+      <div class="walkthrough-step" style="margin-top: 24px;">
+        <div class="walkthrough-step__number">9</div>
+        <div class="walkthrough-step__content">
+          <div class="walkthrough-step__title">Payment Released — Receipt</div>
+          <div class="walkthrough-step__desc">
+            Success screen with animated checkmark. Full receipt: Job ID, provider, amount, fee, total, time, date. Status: "Complete". <em>"Provider gets paid in under 5 minutes."</em> Optional: star rating for the provider. "Done — Back to Home" CTA.
+          </div>
+        </div>
+      </div>
+      <div class="print-screenshot-placeholder">[Screenshot: Receipt — receipt.html]</div>
+      <div class="screen-embed">
+        <iframe src="receipt.html" title="Receipt"></iframe>
+      </div>
+    </div>
+
+    <!-- ============================
+         PAGE 8: EDGE CASES
+         ============================ -->
+    <div class="walkthrough-page">
+      <h2 class="walkthrough-section-title">Edge Cases: Cancel & Dispute</h2>
+      <div class="walkthrough-step">
+        <div class="walkthrough-step__number">—</div>
+        <div class="walkthrough-step__content">
+          <div class="walkthrough-step__title">Cancellation (Job Not Started)</div>
+          <div class="walkthrough-step__desc">
+            If job hasn't started, buyer can cancel and get a <strong>full refund</strong> (including security fee). Refund timeline shown: 1–2 hours. Clear messaging that no money is lost.
+          </div>
+        </div>
+      </div>
+      <div class="print-screenshot-placeholder">[Screenshot: Cancellation — cancel.html]</div>
+      <div class="screen-embed">
+        <iframe src="cancel.html" title="Cancel"></iframe>
+      </div>
+
+      <div class="walkthrough-step" style="margin-top: 24px;">
+        <div class="walkthrough-step__number">—</div>
+        <div class="walkthrough-step__content">
+          <div class="walkthrough-step__title">Dispute (Problem Reported)</div>
+          <div class="walkthrough-step__desc">
+            If there's a problem: funds are held, buyer describes the issue, can upload photos. Support reviews within 24 hours. Resolution options: full refund, partial release, or full release. <em>"Your money is 100% protected."</em>
+          </div>
+        </div>
+      </div>
+      <div class="print-screenshot-placeholder">[Screenshot: Dispute — dispute.html]</div>
+      <div class="screen-embed">
+        <iframe src="dispute.html" title="Dispute"></iframe>
+      </div>
+    </div>
+
+    <!-- ============================
+         PAGE 9: TEST RESULTS
+         ============================ -->
+    <div class="walkthrough-page">
+      <h2 class="walkthrough-section-title">Field Demo Results</h2>
+      <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.6;">
+        Prototype demoed with buyers and providers in the Ihiagwa/Eziobodo (FUTO) area. Each tester was handed a phone with the prototype and asked: <em>"Please book a job and complete it. Talk out loud."</em>
+      </p>
+
+      <table class="walkthrough-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name/Alias</th>
+            <th>Role</th>
+            <th>Confusing Step(s)</th>
+            <th>Trust Concern</th>
+            <th>Time (Job Done→Release)</th>
+            <th>Would Use?</th>
+            <th>Key Quote</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td></td><td>Buyer</td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>2</td><td></td><td>Buyer</td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>3</td><td></td><td>Buyer</td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>4</td><td></td><td>Buyer</td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>5</td><td></td><td>Buyer</td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>6</td><td></td><td>Provider</td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>7</td><td></td><td>Provider</td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>8</td><td></td><td>Provider</td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>9</td><td></td><td>Provider</td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>10</td><td></td><td>Provider</td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>11</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>12</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>13</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>14</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>15</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+
+      <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
+        * Fill this table after running your 10–15 demos. Each row = one tester.
+      </div>
+    </div>
+
+    <!-- ============================
+         PAGE 10: INSIGHTS + NEXT STEPS
+         ============================ -->
+    <div class="walkthrough-page">
+      <h2 class="walkthrough-section-title">Key Insights & Next Steps</h2>
+
+      <div style="margin-bottom: 32px;">
+        <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px;">Hypothesis Tested</h3>
+        <div class="walkthrough-insight">
+          <strong>Hypothesis:</strong> Users trust the escrow system when they see clear "Funds Secured" messaging and can control release via a one-time QR scan.
+        </div>
+      </div>
+
+      <div style="margin-bottom: 32px;">
+        <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px;">Metrics Observed</h3>
+        <div class="walkthrough-insight">
+          <strong>Avg. time from "Job Done" → "Release":</strong> [fill after testing] seconds<br>
+          <strong>Completion rate (no help needed):</strong> [X]/[total] testers<br>
+          <strong>Trust confidence (self-reported):</strong> [X]/10 avg
+        </div>
+      </div>
+
+      <div style="margin-bottom: 32px;">
+        <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px;">Top 3 Confusion Points</h3>
+        <div class="walkthrough-insight">
+          1. [Fill after testing — e.g., "Users paused at the QR scan step"]<br>
+          2. [Fill after testing]<br>
+          3. [Fill after testing]
+        </div>
+      </div>
+
+      <div style="margin-bottom: 32px;">
+        <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px;">Top 3 Trust Objections</h3>
+        <div class="walkthrough-insight">
+          1. [Fill after testing — e.g., "'What if the app closes, is my money lost?'"]<br>
+          2. [Fill after testing]<br>
+          3. [Fill after testing]
+        </div>
+      </div>
+
+      <div style="margin-bottom: 32px;">
+        <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px;">Top 3 Fixes for Next Iteration</h3>
+        <div class="walkthrough-insight">
+          1. [Fill after testing — e.g., "Add refund guarantee wording on checkout"]<br>
+          2. [Fill after testing]<br>
+          3. [Fill after testing]
+        </div>
+      </div>
+
+      <div style="margin-top: 40px; padding-top: 24px; border-top: 2px solid var(--bg-glass-border); text-align: center; font-size: 0.85rem; color: var(--text-muted);">
+        <strong>LocaLe</strong> — Trusted Neighborhood Services<br>
+        Milestone 3 Submission • Escrow Flow Prototype (End-to-End)<br>
+        Built and tested in Ihiagwa/Eziobodo (FUTO Area)
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Print Button (only visible on screen) -->
+  <button class="print-btn no-print" onclick="window.print()">
+    🖨️ Print / Save as PDF
+  </button>
+
+  <script>
+    document.getElementById('submissionDate').textContent = new Date().toLocaleDateString('en-NG', {
+      day: 'numeric', month: 'long', year: 'numeric'
+    });
+
+    // Resize iframes to fit their inner content perfectly to avoid scrollbars in the PDF print.
+    window.addEventListener('load', () => {
+      const iframes = document.querySelectorAll('.screen-embed iframe');
+      iframes.forEach(iframe => {
+        iframe.onload = () => {
+          try {
+            // Wait a tiny bit for inner JS to settle and render elements (like flexboxes)
+            setTimeout(() => {
+              const innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+              if (innerDoc) {
+                // Get the height of the inner scrolling content
+                const body = innerDoc.body;
+                const html = innerDoc.documentElement;
+                
+                const height = Math.max(
+                  body.scrollHeight, body.offsetHeight,
+                  html.clientHeight, html.scrollHeight, html.offsetHeight
+                );
+                
+                // Add a small buffer just to be safe (40px)
+                iframe.style.height = (height + 40) + 'px';
+              }
+            }, 300); 
+          } catch (e) {
+            console.error('Could not resize iframe due to standard cross-origin limits. Ensure you are running on a local server.', e);
+          }
+        };
+      });
+    });
+  </script>
+</body>
+</html>

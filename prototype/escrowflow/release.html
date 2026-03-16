@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0D1117">
+  <title>LocaLe — Release Payment</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <header class="top-bar">
+      <div class="top-bar__logo">LocaLe</div>
+      <div class="top-bar__actions">
+        <button class="top-bar__icon">🔔</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <a href="status.html" class="back-btn">← Back to status</a>
+
+      <h1 class="page-title">Release Payment</h1>
+      <p class="page-subtitle">Scan the provider's QR code only when you are fully satisfied the job is complete.</p>
+
+      <!-- Amount to release -->
+      <div class="amount-display">
+        <div class="amount-display__value" data-bind="price">₦5,000</div>
+        <div class="amount-display__label">Amount to release to provider</div>
+      </div>
+
+      <!-- Trust Message -->
+      <div class="trust-banner">
+        <div class="trust-banner__icon">📱</div>
+        <div class="trust-banner__text">Scan provider's QR to authorize release</div>
+        <div class="trust-banner__sub">
+          The provider shows their one-time QR code. You scan it to confirm you're satisfied.
+        </div>
+      </div>
+
+      <!-- How it works -->
+      <div class="card" style="cursor: default;">
+        <div class="card__title" style="margin-bottom: var(--space-md);">How the QR release works:</div>
+        <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.8;">
+          <div>1️⃣ &nbsp; Provider shows their unique QR code</div>
+          <div>2️⃣ &nbsp; You scan it with your camera</div>
+          <div>3️⃣ &nbsp; Confirm the release</div>
+          <div>4️⃣ &nbsp; Provider gets paid instantly</div>
+        </div>
+      </div>
+
+      <div class="info-text mt-lg">
+        🔐 This QR works <strong>once</strong> and <strong>only for this job</strong>. It expires in 10 minutes.
+      </div>
+
+      <div class="info-text info-text--amber mt-md">
+        📍 Code works even with weak network — no internet needed for verification.
+      </div>
+
+    </main>
+
+    <!-- Floating Action -->
+    <div class="action-area">
+      <a href="scan.html" class="btn btn--primary">
+        📷 Open Scanner
+      </a>
+      <a href="dispute.html" class="btn btn--danger mt-sm" style="font-size: 0.85rem;">
+        Not satisfied? Report issue
+      </a>
+    </div>
+
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

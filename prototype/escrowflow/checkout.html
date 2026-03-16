@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0D1117">
+  <title>LocaLe — Fund & Hold</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <header class="top-bar">
+      <div class="top-bar__logo">LocaLe</div>
+      <div class="top-bar__actions">
+        <button class="top-bar__icon">🔔</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <a href="provider.html" class="back-btn">← Back</a>
+
+      <h1 class="page-title">Secure Payment</h1>
+
+      <!-- Trust Banner -->
+      <div class="trust-banner">
+        <div class="trust-banner__icon">🔒</div>
+        <div class="trust-banner__text">Your money is held safely until the job is confirmed done.</div>
+        <div class="trust-banner__sub">Provider cannot receive payment until you scan to release.</div>
+      </div>
+
+      <!-- Amount -->
+      <div class="amount-display">
+        <div class="amount-display__value" data-bind="price">₦5,000</div>
+        <div class="amount-display__label">+ ₦100 security fee</div>
+      </div>
+
+      <!-- Payment Options -->
+      <div class="mb-lg">
+        <label class="form-label">Choose payment method</label>
+
+        <div class="payment-option active" onclick="selectPayment('transfer', this)" id="pay-transfer">
+          <span class="payment-option__icon">🏦</span>
+          <div class="payment-option__info">
+            <div class="payment-option__name">Bank Transfer</div>
+            <div class="payment-option__desc">Transfer to our escrow account</div>
+          </div>
+          <span class="payment-option__badge">Recommended</span>
+        </div>
+
+        <div class="payment-option" onclick="selectPayment('card', this)" id="pay-card">
+          <span class="payment-option__icon">💳</span>
+          <div class="payment-option__info">
+            <div class="payment-option__name">Card Payment</div>
+            <div class="payment-option__desc">Debit or credit card</div>
+          </div>
+        </div>
+
+        <div class="payment-option" onclick="selectPayment('ussd', this)" id="pay-ussd">
+          <span class="payment-option__icon">📱</span>
+          <div class="payment-option__info">
+            <div class="payment-option__name">USSD</div>
+            <div class="payment-option__desc">Works without internet</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transfer Details -->
+      <div class="transfer-details" id="transferDetails">
+        <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: var(--space-md); color: var(--green-primary);">Transfer to this account:</div>
+        <div class="transfer-details__row">
+          <span class="transfer-details__label">Bank</span>
+          <span class="transfer-details__value">LocaLe Escrow (Wema Bank)</span>
+        </div>
+        <div class="transfer-details__row">
+          <span class="transfer-details__label">Account Number</span>
+          <span>
+            <span class="transfer-details__value">0123456789</span>
+            <span class="transfer-details__copy" onclick="copyText('0123456789', this)" style="margin-left: 8px;">Copy</span>
+          </span>
+        </div>
+        <div class="transfer-details__row">
+          <span class="transfer-details__label">Amount</span>
+          <span class="transfer-details__value text-green" data-bind="total">₦5,100</span>
+        </div>
+        <div class="transfer-details__row">
+          <span class="transfer-details__label">Reference</span>
+          <span>
+            <span class="transfer-details__value" data-bind="escrowRef">LCL-0001</span>
+            <span class="transfer-details__copy" onclick="copyText(getState().escrowRef || 'LCL-0001', this)" style="margin-left: 8px;">Copy</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="info-text">
+        🛡️ Funds are held until you confirm job done with a one-time QR scan. Provider gets paid instantly after verification.
+      </div>
+
+      <div class="info-text info-text--amber mt-md">
+        ⏱️ Transfer must be completed within 30 minutes to lock this booking.
+      </div>
+
+    </main>
+
+    <!-- Floating Action -->
+    <div class="action-area">
+      <a href="status.html" class="btn btn--primary" id="fundBtn">
+        🔒 I've Sent the Transfer — Fund & Secure
+      </a>
+      <a href="cancel.html" class="btn btn--secondary mt-sm" style="font-size: 0.85rem;">
+        Cancel booking
+      </a>
+    </div>
+
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

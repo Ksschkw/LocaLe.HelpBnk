@@ -353,95 +353,111 @@ document.querySelectorAll('.step, .service-card, .pricing-card, .zone, .quote-ca
 });
 
 // ================================================
-// CASCADING LOCATION PICKER
-// (powered by country-state-city CDN library)
+// CASCADING LOCATION PICKER (via countriesnow API)
 // ================================================
-function initLocationPicker() {
-  const { Country, State, City } = window.csc || {};
-  if (!Country) {
-    console.warn('country-state-city library not loaded yet');
-    return;
-  }
-
+async function initLocationPicker() {
   const countryEl = document.getElementById('countrySelect');
   const stateEl   = document.getElementById('stateSelect');
   const cityEl    = document.getElementById('citySelect');
   const stateRow  = document.getElementById('stateRow');
   const areaRow   = document.getElementById('areaRow');
 
-  // Populate countries
-  const countries = Country.getAllCountries();
-  countries.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c.isoCode;
-    opt.textContent = `${c.flag || ''} ${c.name}`;
-    countryEl.appendChild(opt);
-  });
+  try {
+    // 1. Fetch all countries
+    const res = await fetch('https://countriesnow.space/api/v0.1/countries/states');
+    const data = await res.json();
+    if (!data.error) {
+      const countries = data.data;
 
-  // Pre-select Nigeria if available
-  const ngOpt = countryEl.querySelector('option[value="NG"]');
-  if (ngOpt) ngOpt.selected = true;
-
-  // Country → States
-  countryEl.addEventListener('change', () => {
-    const isoCode = countryEl.value;
-    stateEl.innerHTML = '<option value="">Select state / region...</option>';
-    cityEl.innerHTML  = '<option value="">Select city...</option>';
-    stateRow.style.display = 'none';
-    areaRow.style.display  = 'none';
-
-    if (!isoCode) return;
-
-    const states = State.getStatesOfCountry(isoCode);
-    if (states.length > 0) {
-      states.forEach(s => {
+      // Populate countries
+      countries.forEach(c => {
         const opt = document.createElement('option');
-        opt.value = s.isoCode;
-        opt.textContent = s.name;
-        stateEl.appendChild(opt);
+        opt.value = c.name; // Use name as value to pass to API later
+        opt.textContent = c.name;
+        countryEl.appendChild(opt);
       });
-      stateRow.style.display = 'grid';
-    } else {
-      // No state data — skip straight to area
-      areaRow.style.display = 'block';
-    }
-  });
 
-  // State → Cities
-  stateEl.addEventListener('change', () => {
-    const countryCode = countryEl.value;
-    const stateCode   = stateEl.value;
-    cityEl.innerHTML  = '<option value="">Select city...</option>';
-    areaRow.style.display = 'none';
+      // Pre-select Nigeria
+      const ngOpt = Array.from(countryEl.options).find(opt => opt.value === 'Nigeria');
+      if (ngOpt) ngOpt.selected = true;
 
-    if (!stateCode) return;
+      // When Country changes
+      countryEl.addEventListener('change', async () => {
+        const selectedCountry = countryEl.value;
+        stateEl.innerHTML = '<option value="">Select state / region...</option>';
+        cityEl.innerHTML  = '<option value="">Select city...</option>';
+        stateRow.style.display = 'none';
+        areaRow.style.display  = 'none';
 
-    const cities = City.getCitiesOfState(countryCode, stateCode);
-    if (cities.length > 0) {
-      cities.forEach(ci => {
-        const opt = document.createElement('option');
-        opt.value = ci.name;
-        opt.textContent = ci.name;
-        cityEl.appendChild(opt);
+        if (!selectedCountry) return;
+
+        const countryObj = countries.find(c => c.name === selectedCountry);
+        if (countryObj && countryObj.states && countryObj.states.length > 0) {
+          countryObj.states.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.name;
+            opt.textContent = s.name;
+            stateEl.appendChild(opt);
+          });
+          stateRow.style.display = 'grid';
+        } else {
+          // No states available, go straight to manual area input
+          areaRow.style.display = 'block';
+        }
       });
-    } else {
-      // No city data — use free text area
-      const opt = document.createElement('option');
-      opt.value = 'Type below';
-      opt.textContent = '— Type your city/area below —';
-      cityEl.appendChild(opt);
-      cityEl.value = 'Type below';
+
+      // When State changes -> Fetch cities for that state
+      stateEl.addEventListener('change', async () => {
+        const selectedCountry = countryEl.value;
+        const selectedState = stateEl.value;
+        cityEl.innerHTML  = '<option value="">Select city...</option>';
+        areaRow.style.display = 'none';
+
+        if (!selectedState) return;
+
+        try {
+          const resCities = await fetch('https://countriesnow.space/api/v0.1/countries/state/cities', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ country: selectedCountry, state: selectedState })
+          });
+          const dataCities = await resCities.json();
+
+          if (!dataCities.error && dataCities.data && dataCities.data.length > 0) {
+            dataCities.data.forEach(city => {
+              const opt = document.createElement('option');
+              opt.value = city;
+              opt.textContent = city;
+              cityEl.appendChild(opt);
+            });
+            cityEl.parentElement.style.display = 'block';
+          } else {
+            // Hide city dropdown if no cities exist, just show manual area
+            cityEl.innerHTML = '<option value="N/A">N/A</option>';
+            cityEl.parentElement.style.display = 'none';
+          }
+        } catch (e) {
+          console.error('Error fetching cities', e);
+          cityEl.innerHTML = '<option value="N/A">N/A</option>';
+          cityEl.parentElement.style.display = 'none';
+        }
+        areaRow.style.display = 'block'; // Always show area box at the end
+      });
+
+      // When City changes
+      cityEl.addEventListener('change', () => {
+        if (cityEl.value) areaRow.style.display = 'block';
+      });
+
+      // Trigger initial country selection (Nigeria)
+      countryEl.dispatchEvent(new Event('change'));
     }
+  } catch (err) {
+    console.error('Location picker failed to load:', err);
+    // Fallback: just show the free-text Area input if API fails
+    countryEl.innerHTML = '<option value="Manual Entry">Manual Entry</option>';
     areaRow.style.display = 'block';
-  });
-
-  // City selected → show area
-  cityEl.addEventListener('change', () => {
-    if (cityEl.value) areaRow.style.display = 'block';
-  });
-
-  // Trigger Nigeria by default
-  countryEl.dispatchEvent(new Event('change'));
+  }
 }
 
 // ================================================

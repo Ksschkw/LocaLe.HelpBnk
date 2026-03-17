@@ -353,10 +353,103 @@ document.querySelectorAll('.step, .service-card, .pricing-card, .zone, .quote-ca
 });
 
 // ================================================
+// CASCADING LOCATION PICKER
+// (powered by country-state-city CDN library)
+// ================================================
+function initLocationPicker() {
+  const { Country, State, City } = window.csc || {};
+  if (!Country) {
+    console.warn('country-state-city library not loaded yet');
+    return;
+  }
+
+  const countryEl = document.getElementById('countrySelect');
+  const stateEl   = document.getElementById('stateSelect');
+  const cityEl    = document.getElementById('citySelect');
+  const stateRow  = document.getElementById('stateRow');
+  const areaRow   = document.getElementById('areaRow');
+
+  // Populate countries
+  const countries = Country.getAllCountries();
+  countries.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.isoCode;
+    opt.textContent = `${c.flag || ''} ${c.name}`;
+    countryEl.appendChild(opt);
+  });
+
+  // Pre-select Nigeria if available
+  const ngOpt = countryEl.querySelector('option[value="NG"]');
+  if (ngOpt) ngOpt.selected = true;
+
+  // Country → States
+  countryEl.addEventListener('change', () => {
+    const isoCode = countryEl.value;
+    stateEl.innerHTML = '<option value="">Select state / region...</option>';
+    cityEl.innerHTML  = '<option value="">Select city...</option>';
+    stateRow.style.display = 'none';
+    areaRow.style.display  = 'none';
+
+    if (!isoCode) return;
+
+    const states = State.getStatesOfCountry(isoCode);
+    if (states.length > 0) {
+      states.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.isoCode;
+        opt.textContent = s.name;
+        stateEl.appendChild(opt);
+      });
+      stateRow.style.display = 'grid';
+    } else {
+      // No state data — skip straight to area
+      areaRow.style.display = 'block';
+    }
+  });
+
+  // State → Cities
+  stateEl.addEventListener('change', () => {
+    const countryCode = countryEl.value;
+    const stateCode   = stateEl.value;
+    cityEl.innerHTML  = '<option value="">Select city...</option>';
+    areaRow.style.display = 'none';
+
+    if (!stateCode) return;
+
+    const cities = City.getCitiesOfState(countryCode, stateCode);
+    if (cities.length > 0) {
+      cities.forEach(ci => {
+        const opt = document.createElement('option');
+        opt.value = ci.name;
+        opt.textContent = ci.name;
+        cityEl.appendChild(opt);
+      });
+    } else {
+      // No city data — use free text area
+      const opt = document.createElement('option');
+      opt.value = 'Type below';
+      opt.textContent = '— Type your city/area below —';
+      cityEl.appendChild(opt);
+      cityEl.value = 'Type below';
+    }
+    areaRow.style.display = 'block';
+  });
+
+  // City selected → show area
+  cityEl.addEventListener('change', () => {
+    if (cityEl.value) areaRow.style.display = 'block';
+  });
+
+  // Trigger Nigeria by default
+  countryEl.dispatchEvent(new Event('change'));
+}
+
+// ================================================
 // INIT
 // ================================================
 document.addEventListener('DOMContentLoaded', () => {
   parseUTM();
   getOrCreateSessionId();
   getVisitorStatus();
+  initLocationPicker();
 });

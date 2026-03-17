@@ -19,7 +19,7 @@ landing/
 3. On **Row 1**, add these headers exactly (copy-paste this whole row):
 
 ```
-Timestamp | Name | Phone | Neighborhood | Role | Job Type | Price Range | Fee Preference | Biggest Fear | UTM Source | UTM Medium | UTM Campaign | Location | Opened From | Time On Page | Scroll Depth | Session ID | Visitor Status | Device Info | Screen Info | Timezone | Language | Connection | Referrer URL
+Timestamp | Name | Phone | Role | Location Country | Location State | Location City | Location Area | Job Type | Price Range | Fee Preference | Biggest Fear | UTM Source | UTM Medium | UTM Campaign | GPS/IP Location | Opened From | Time On Page | Scroll Depth | Session ID | Visitor Status | Device Info | Screen Info | Timezone | Language | Connection | Referrer URL
 ```
 
 ---
@@ -36,32 +36,39 @@ function doPost(e) {
     var data = JSON.parse(e.postData.contents);
 
     sheet.appendRow([
-      data.signupTimestamp  || new Date().toLocaleString(),
-      data.name             || '',
-      data.phone            || '',
-      data.neighborhood     || '',
-      data.role             || '',
-      data.jobType          || '',
-      data.priceRange       || '',
-      data.feePref          || '',
-      data.biggestFear      || '',
-      data.utmSource        || 'direct',
-      data.utmMedium        || '',
-      data.utmCampaign      || '',
-      data.location         || '',
-      data.openedFrom       || '',
+      data.signupTimestamp   || new Date().toLocaleString(),
+      data.name              || '',
+      data.phone             || '',
+      data.role              || '',
+      // Cascading location
+      data.locationCountry   || '',
+      data.locationState     || '',
+      data.locationCity      || '',
+      data.locationArea      || '',
+      // Job intent
+      data.jobType           || '',
+      data.priceRange        || '',
+      data.feePref           || '',
+      data.biggestFear       || '',
+      // UTM
+      data.utmSource         || 'direct',
+      data.utmMedium         || '',
+      data.utmCampaign       || '',
+      // Geolocation (GPS/IP)
+      data.location          || '',
+      data.openedFrom        || '',
       // Behavioral
-      data.timeOnPage       || '',
-      data.scrollDepth      || '',
+      data.timeOnPage        || '',
+      data.scrollDepth       || '',
       // Device / session
-      data.sessionId        || '',
-      data.visitorStatus    || '',
-      data.deviceInfo       || '',
-      data.screenInfo       || '',
-      data.timezone         || '',
-      data.language         || '',
-      data.connection       || '',
-      data.referrerUrl      || ''
+      data.sessionId         || '',
+      data.visitorStatus     || '',
+      data.deviceInfo        || '',
+      data.screenInfo        || '',
+      data.timezone          || '',
+      data.language          || '',
+      data.connection        || '',
+      data.referrerUrl       || ''
     ]);
 
     return ContentService
@@ -128,10 +135,10 @@ Use these link formats when sharing in different channels:
 
 | Channel | UTM Link |
 |---|---|
-| WhatsApp groups | `https://your-url.com?utm_source=whatsapp&utm_medium=group&utm_campaign=futo-pilot` |
-| Flyer QR code | `https://your-url.com?utm_source=flyer&utm_medium=qr&utm_campaign=futo-pilot` |
-| Direct DMs | `https://your-url.com?utm_source=dm&utm_medium=whatsapp&utm_campaign=outreach` |
-| Instagram bio | `https://your-url.com?utm_source=instagram&utm_medium=bio` |
+| WhatsApp groups | `https://locale-waitlist.onrender.com?utm_source=whatsapp&utm_medium=group&utm_campaign=pilot` |
+| Flyer QR code | `https://locale-waitlist.onrender.com?utm_source=flyer&utm_medium=qr&utm_campaign=pilot` |
+| Direct DMs | `https://locale-waitlist.onrender.com?utm_source=dm&utm_medium=whatsapp&utm_campaign=outreach` |
+| Instagram bio | `https://locale-waitlist.onrender.com?utm_source=instagram&utm_medium=bio` |
 
 These automatically populate the UTM columns in your Google Sheet.
 

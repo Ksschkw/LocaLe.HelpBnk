@@ -467,13 +467,26 @@
           </select>
         </div>
 
-        <!-- Hidden tracking fields -->
-        <input type="hidden" name="utmSource" id="utmSource">
-        <input type="hidden" name="utmMedium" id="utmMedium">
-        <input type="hidden" name="utmCampaign" id="utmCampaign">
-        <input type="hidden" name="location" id="locationField">
+        <!-- Hidden tracking fields (auto-populated by JS) -->
+        <input type="hidden" name="utmSource"     id="utmSource">
+        <input type="hidden" name="utmMedium"     id="utmMedium">
+        <input type="hidden" name="utmCampaign"   id="utmCampaign">
+        <input type="hidden" name="location"      id="locationField">
         <input type="hidden" name="signupTimestamp" id="signupTimestamp">
-        <input type="hidden" name="openedFrom" id="openedFrom">
+        <input type="hidden" name="openedFrom"    id="openedFrom">
+        <!-- Behavioral signals -->
+        <input type="hidden" name="timeOnPage"    id="timeOnPage">
+        <input type="hidden" name="scrollDepth"   id="scrollDepth">
+        <!-- Device / session fingerprint -->
+        <input type="hidden" name="sessionId"     id="sessionId">
+        <input type="hidden" name="visitorStatus" id="visitorStatus">
+        <input type="hidden" name="deviceInfo"    id="deviceInfo">
+        <input type="hidden" name="screenInfo"    id="screenInfo">
+        <input type="hidden" name="timezone"      id="timezone">
+        <input type="hidden" name="language"      id="language">
+        <input type="hidden" name="connection"    id="connection">
+        <input type="hidden" name="referrerUrl"   id="referrerUrl">
+
 
         <button type="submit" class="btn-cta btn-cta--lg" id="submitBtn" style="width:100%;margin-top:8px;">
           <span id="submitLabel">🚀 Secure My Spot</span>

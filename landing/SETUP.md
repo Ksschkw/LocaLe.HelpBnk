@@ -16,10 +16,10 @@ landing/
 
 1. Go to [sheets.google.com](https://sheets.google.com) → **New spreadsheet**
 2. Rename it: `LocaLe Waitlist`
-3. On **Row 1**, add these headers exactly (order matters):
+3. On **Row 1**, add these headers exactly (copy-paste this whole row):
 
 ```
-Timestamp | Name | Phone | Neighborhood | Role | Job Type | Price Range | Fee Preference | Biggest Fear | UTM Source | UTM Medium | UTM Campaign | Location | Opened From
+Timestamp | Name | Phone | Neighborhood | Role | Job Type | Price Range | Fee Preference | Biggest Fear | UTM Source | UTM Medium | UTM Campaign | Location | Opened From | Time On Page | Scroll Depth | Session ID | Visitor Status | Device Info | Screen Info | Timezone | Language | Connection | Referrer URL
 ```
 
 ---
@@ -36,20 +36,32 @@ function doPost(e) {
     var data = JSON.parse(e.postData.contents);
 
     sheet.appendRow([
-      data.signupTimestamp || new Date().toLocaleString(),
-      data.name || '',
-      data.phone || '',
-      data.neighborhood || '',
-      data.role || '',
-      data.jobType || '',
-      data.priceRange || '',
-      data.feePref || '',
-      data.biggestFear || '',
-      data.utmSource || 'direct',
-      data.utmMedium || '',
-      data.utmCampaign || '',
-      data.location || '',
-      data.openedFrom || ''
+      data.signupTimestamp  || new Date().toLocaleString(),
+      data.name             || '',
+      data.phone            || '',
+      data.neighborhood     || '',
+      data.role             || '',
+      data.jobType          || '',
+      data.priceRange       || '',
+      data.feePref          || '',
+      data.biggestFear      || '',
+      data.utmSource        || 'direct',
+      data.utmMedium        || '',
+      data.utmCampaign      || '',
+      data.location         || '',
+      data.openedFrom       || '',
+      // Behavioral
+      data.timeOnPage       || '',
+      data.scrollDepth      || '',
+      // Device / session
+      data.sessionId        || '',
+      data.visitorStatus    || '',
+      data.deviceInfo       || '',
+      data.screenInfo       || '',
+      data.timezone         || '',
+      data.language         || '',
+      data.connection       || '',
+      data.referrerUrl      || ''
     ]);
 
     return ContentService
@@ -64,12 +76,16 @@ function doPost(e) {
 ```
 
 3. Click **Save** (💾)
-4. Click **Deploy → New deployment**
+4. Click **Deploy → New deployment** (or **Manage deployments → Edit** if already deployed, then click **Deploy** again to create a new version)
 5. Settings:
    - Type: **Web app**
    - Execute as: **Me**
    - Who has access: **Anyone**
-6. Click **Deploy** → Copy the **Web app URL** (looks like `https://script.google.com/macros/s/.../exec`)
+6. Click **Deploy** → Copy the **Web app URL**
+
+> ⚠️ **Important:** Every time you change the Apps Script code, you must create a **new version** under "Manage deployments → Edit → New version" and redeploy — otherwise the old version keeps running.
+
+
 
 ---
 

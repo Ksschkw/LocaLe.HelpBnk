@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#0A0E1A">
+  <meta name="description" content="LocaLe — Data, Identity, & Safety Controls">
+  <title>LocaLe — Privacy & Safety Policy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .terms-content {
+      max-width: 800px;
+      margin: 120px auto 60px;
+      padding: 0 24px;
+      color: var(--text-2);
+      line-height: 1.8;
+    }
+    .terms-content h1 {
+      color: var(--text);
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      margin-bottom: 2rem;
+      letter-spacing: -1px;
+    }
+    .terms-content h2 {
+      color: var(--text);
+      margin-top: 3rem;
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    .terms-content h3 {
+      color: var(--text);
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      font-size: 1.25rem;
+    }
+    .terms-content p {
+      margin-bottom: 1.25rem;
+    }
+    .terms-content ul, .terms-content ol {
+      margin-bottom: 1.5rem;
+      padding-left: 1.5rem;
+    }
+    .terms-content ul {
+      list-style-type: none;
+    }
+    .terms-content ul li {
+      position: relative;
+      margin-bottom: 0.75rem;
+    }
+    .terms-content ul li::before {
+      content: "•";
+      color: var(--green);
+      position: absolute;
+      left: -1.5rem;
+      top: 0;
+      font-weight: bold;
+    }
+    .terms-content ol li {
+      margin-bottom: 0.75rem;
+      padding-left: 0.5rem;
+    }
+    .terms-content ol li::marker {
+      color: var(--green);
+      font-weight: 700;
+    }
+    .terms-content strong {
+      color: var(--text);
+    }
+    .terms-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0 2.5rem;
+      font-size: 0.9rem;
+    }
+    .terms-content th, .terms-content td {
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+    .terms-content th {
+      font-weight: 700;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .footer-links {
+      margin: 1.5rem 0;
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .footer-links a {
+      color: var(--text-2);
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover {
+      color: var(--green);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============ NAV ============ -->
+  <nav class="nav" id="nav">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo" style="text-decoration: none;">LocaLe</a>
+      <a href="index.html" class="btn-cta btn-cta--sm nav__cta" style="text-decoration: none;">Back to Home</a>
+    </div>
+  </nav>
+
+  <!-- ============ CONTENT ============ -->
+  <main class="terms-content">
+    <h1>LocaLe: Data, Identity, &amp; Safety Controls (Pilot Phase)</h1>
+
+    <h2>1. Data Inventory &amp; Mapping</h2>
+    <p>We follow the principle of Data Minimization (in compliance with local data privacy frameworks). We only collect what is strictly necessary to secure the transaction.</p>
+    
+    <div style="overflow-x: auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Data Category</th>
+            <th>Specific Elements</th>
+            <th>Storage Location</th>
+            <th>Retention Rule</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Identity</strong></td>
+            <td>Name, Phone (WhatsApp), Neighborhood.</td>
+            <td>Encrypted PostgreSQL (AES-256)</td>
+            <td>3 years after last active use.</td>
+          </tr>
+          <tr>
+            <td><strong>KYC (Tier 2)</strong></td>
+            <td>Government ID/Tax ID (via API hash).</td>
+            <td>Not stored locally (Partner-held).</td>
+            <td>Session-only verification.</td>
+          </tr>
+          <tr>
+            <td><strong>Transaction</strong></td>
+            <td>Job Type, Transaction Amount, Timestamp, GPS.</td>
+            <td>Encrypted Database.</td>
+            <td>6 years (Audit/Tax compliance).</td>
+          </tr>
+          <tr>
+            <td><strong>Behavioral</strong></td>
+            <td>IP Address, Device Info, Time-on-page.</td>
+            <td>Temporary Logs.</td>
+            <td>90 days (Fraud analysis).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>2. Identity &amp; Fraud Controls</h2>
+    <ul>
+      <li><strong>Onboarding:</strong> Mandatory WhatsApp OTP verification to ensure the "Phone-Identity" link.</li>
+      <li><strong>Proximity Rule:</strong> System flags any "Release Code" entry attempted from a GPS location &gt; 5km from the original "Job Started" coordinate (prevents remote theft).</li>
+      <li><strong>Tax ID Validation:</strong> Per local tax administration mandates, all Providers must link a valid Tax ID via our verification partner before their first payout.</li>
+      <li><strong>Banning:</strong> Permanent hardware-ID ban for any account associated with a "Stolen Code" or "Fraudulent Refund" incident.</li>
+    </ul>
+
+    <h2>3. Incident &amp; Breach Response Plan</h2>
+    <p>In the event of a suspected data leak or unauthorized access:</p>
+    <ol>
+      <li><strong>Detection:</strong> Real-time monitoring of failed login attempts and unauthorized API calls via server logs.</li>
+      <li><strong>Containment:</strong> Immediate rotation of API keys and temporary lockdown of the affected user Node.</li>
+      <li><strong>Notification (72-Hour Rule):</strong> We will notify the local Data Protection Authority and affected users within 72 hours of a confirmed breach.</li>
+      <li><strong>Recovery:</strong> Restore from the last "Clean" encrypted backup; patch the vulnerability.</li>
+    </ol>
+
+    <h2>4. Consent &amp; Privacy UI</h2>
+    <ul>
+      <li><strong>Explicit Consent:</strong> A mandatory "I agree to the LocaLe Privacy Policy" checkbox on the signup modal.</li>
+      <li><strong>Age Gate:</strong> Users must confirm they are 18+ to engage in financial escrow.</li>
+      <li><strong>Data Request Tool:</strong> A simple "Export My Data" button in the profile settings to comply with the Right to Portability.</li>
+    </ul>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__logo">LocaLe</div>
+      <p class="footer__tagline">Trusted neighborhood services. Escrow-protected.</p>
+      <div class="footer-links">
+        <a href="terms.html">Terms &amp; Conditions</a>
+        <a href="privacy.html">Privacy Policy</a>
+      </div>
+      <p class="footer__copy">© 2026 LocaLe. Built for every neighborhood. 🌍</p>
+    </div>
+  </footer>
+
+</body>
+</html>

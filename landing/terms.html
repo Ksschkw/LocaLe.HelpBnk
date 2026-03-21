@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#0A0E1A">
+  <meta name="description" content="LocaLe — Terms & Conditions">
+  <title>LocaLe — Terms & Conditions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .terms-content {
+      max-width: 800px;
+      margin: 120px auto 60px;
+      padding: 0 24px;
+      color: var(--text-2);
+      line-height: 1.8;
+    }
+    .terms-content h1 {
+      color: var(--text);
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      margin-bottom: 2rem;
+      letter-spacing: -1px;
+    }
+    .terms-content h2 {
+      color: var(--text);
+      margin-top: 3rem;
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    .terms-content h3 {
+      color: var(--text);
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      font-size: 1.25rem;
+    }
+    .terms-content p {
+      margin-bottom: 1.25rem;
+    }
+    .terms-content ul {
+      margin-bottom: 1.5rem;
+      padding-left: 1.5rem;
+      list-style-type: none;
+    }
+    .terms-content ul li {
+      position: relative;
+      margin-bottom: 0.75rem;
+      padding-left: 1.5rem;
+    }
+    .terms-content ul li::before {
+      content: "•";
+      color: var(--green);
+      position: absolute;
+      left: 0;
+      top: 0;
+      font-weight: bold;
+    }
+    .terms-content strong {
+      color: var(--text);
+    }
+    .footer-links {
+      margin: 1.5rem 0;
+    }
+    .footer-links a {
+      color: var(--text-2);
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover {
+      color: var(--green);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============ NAV ============ -->
+  <nav class="nav" id="nav">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo" style="text-decoration: none;">LocaLe</a>
+      <a href="index.html" class="btn-cta btn-cta--sm nav__cta" style="text-decoration: none;">Back to Home</a>
+    </div>
+  </nav>
+
+  <!-- ============ CONTENT ============ -->
+  <main class="terms-content">
+    <h1>LocaLe: Core Marketplace &amp; Escrow Terms (v1.0)</h1>
+
+    <h2>1. The Escrow Rule (The "Vault" Policy)</h2>
+    <ul>
+      <li><strong>The Hold:</strong> When a Buyer pays for a job, LocaLe holds 100% of the funds securely in escrow.</li>
+      <li><strong>The Release:</strong> Funds are only released to the Provider when the Buyer provides the 6-digit Verification Code or scans the QR Code.</li>
+      <li><strong>Automatic Release:</strong> If a Provider marks a job as "Completed" and the Buyer does not "Release" or "Dispute" within 24 hours, the system may trigger an automatic release after internal review.</li>
+    </ul>
+
+    <h2>2. The 30/70 "Commitment" Split</h2>
+    <ul>
+      <li>To prevent "no-shows," the 30% Deposit is non-refundable if the Provider arrives at the location and the Buyer cancels without valid cause.</li>
+      <li>The 70% Balance is strictly tied to the "Job Done" checklist.</li>
+    </ul>
+
+    <h2>3. Dispute &amp; Refund Policy</h2>
+    <ul>
+      <li><strong>The "Hold" Trigger:</strong> If a Buyer is unhappy, they must tap "Report Issue" instead of sharing the code. This freezes the funds instantly.</li>
+      <li><strong>Evidence:</strong> Both parties must provide photo/video proof within 12 hours of a dispute being opened.</li>
+      <li><strong>Refunds:</strong> If the Provider fails to deliver the "Job Done" checklist, a full or partial refund is issued to the Buyer’s LocaLe wallet/original payment method.</li>
+    </ul>
+
+    <h2>4. Service Provider Agreement</h2>
+    <ul>
+      <li><strong>Independent Contractor:</strong> Providers are not employees of LocaLe. They are independent neighborhood entrepreneurs.</li>
+      <li><strong>The "Off-Platform" Ban:</strong> Any Provider caught asking a Buyer to "pay cash directly" to bypass the escrow for a LocaLe-initiated job will be permanently banned. This protects the integrity of the "Trust Vault."</li>
+    </ul>
+
+    <h2>5. Data &amp; Identity Policy</h2>
+    <ul>
+      <li><strong>Identity:</strong> Basic "Social Vouching" (Phone + Neighborhood) is required for all jobs. <strong>Valid Government-issued ID is mandatory for high-value jobs (exceeding the regional platform threshold).</strong></li>
+      <li><strong>Privacy:</strong> We only share the Provider's first name and rating with the Buyer until the job is accepted. Precise locations are only revealed once the deposit is secured.</li>
+    </ul>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__logo">LocaLe</div>
+      <p class="footer__tagline">Trusted neighborhood services. Escrow-protected.</p>
+      <div class="footer-links">
+        <a href="terms.html">Terms &amp; Conditions</a>
+      </div>
+      <p class="footer__copy">© 2026 LocaLe. Built for every neighborhood. 🌍</p>
+    </div>
+  </footer>
+
+</body>
+</html>

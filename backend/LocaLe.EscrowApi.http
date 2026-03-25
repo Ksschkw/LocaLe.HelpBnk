@@ -1,0 +1,6 @@
+@LocaLe.EscrowApi_HostAddress = http://localhost:5012
+
+GET {{LocaLe.EscrowApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

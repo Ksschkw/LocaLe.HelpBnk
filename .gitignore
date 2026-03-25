@@ -1,1 +1,10 @@
 *1.md
+milestones/
+.packages/
+bin/
+obj/
+*.md
+.1prd
+localedb.sqlite
+.vscode
+.env*

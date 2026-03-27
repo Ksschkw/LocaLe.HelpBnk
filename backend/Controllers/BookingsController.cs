@@ -76,6 +76,42 @@ namespace LocaLe.EscrowApi.Controllers
             return Ok(bookings);
         }
 
+        /// <summary>
+        /// Update the status of a booking (e.g. from Pending to Rejected).
+        /// </summary>
+        [HttpPut("{id}/status")]
+        [ProducesResponseType(typeof(BookingResponse), 200)]
+        public async Task<IActionResult> UpdateBookingStatus(int id, [FromBody] string newStatus)
+        {
+            var userId = GetCurrentUserId();
+            try
+            {
+                var booking = await _bookingService.UpdateBookingStatusAsync(id, userId, newStatus);
+                return Ok(booking);
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { Error = ex.Message }); }
+            catch (UnauthorizedAccessException ex) { return Forbid(); }
+            catch (InvalidOperationException ex) { return BadRequest(new { Error = ex.Message }); }
+        }
+
+        /// <summary>
+        /// Delete/Cancel a booking.
+        /// </summary>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(204)]
+        public async Task<IActionResult> DeleteBooking(int id)
+        {
+            var userId = GetCurrentUserId();
+            try
+            {
+                await _bookingService.DeleteBookingAsync(id, userId);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { Error = ex.Message }); }
+            catch (UnauthorizedAccessException ex) { return Forbid(); }
+            catch (InvalidOperationException ex) { return BadRequest(new { Error = ex.Message }); }
+        }
+
         private int GetCurrentUserId()
         {
             var claim = User.FindFirstValue(ClaimTypes.NameIdentifier)

@@ -7,21 +7,23 @@ namespace LocaLe.EscrowApi.Models
     public class Vouch
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
-        public int ServiceId { get; set; }
+        public Guid ServiceId { get; set; }
 
         [ForeignKey("ServiceId")]
         [JsonIgnore]
         public Service? Service { get; set; }
 
         [Required]
-        public int VoucherId { get; set; }
+        public Guid VoucherId { get; set; }
 
         [ForeignKey("VoucherId")]
         [JsonIgnore]
         public User? Voucher { get; set; }
+
+        public bool IsPlatformUser { get; set; } = false;
 
         public int PointsGiven { get; set; } = 1;
 

@@ -1,29 +1,31 @@
 using LocaLe.EscrowApi.Data;
 using LocaLe.EscrowApi.DTOs;
 using LocaLe.EscrowApi.Interfaces;
+using LocaLe.EscrowApi.Interfaces.Repositories;
 using LocaLe.EscrowApi.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace LocaLe.EscrowApi.Services
 {
     public class WalletService : IWalletService
     {
-        private readonly EscrowContext _context;
+        private readonly IWalletRepository _walletRepo;
+        private readonly IAuditLogRepository _auditRepo;
 
-        public WalletService(EscrowContext context)
+        public WalletService(IWalletRepository walletRepo, IAuditLogRepository auditRepo)
         {
-            _context = context;
+            _walletRepo = walletRepo;
+            _auditRepo = auditRepo;
         }
 
         public async Task<WalletResponse> GetOrCreateWalletAsync(int userId)
         {
-            var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.UserId == userId);
+            var wallet = await _walletRepo.GetByUserIdAsync(userId);
 
             if (wallet == null)
             {
                 wallet = new Wallet { UserId = userId, Balance = 0m };
-                _context.Wallets.Add(wallet);
-                await _context.SaveChangesAsync();
+                await _walletRepo.AddAsync(wallet);
+                await _walletRepo.SaveChangesAsync();
             }
 
             return new WalletResponse { UserId = wallet.UserId, Balance = wallet.Balance };
@@ -38,19 +40,20 @@ namespace LocaLe.EscrowApi.Services
             if (amount <= 0)
                 throw new ArgumentException("Top-up amount must be positive.");
 
-            var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.UserId == userId);
+            var wallet = await _walletRepo.GetByUserIdAsync(userId);
 
             if (wallet == null)
             {
                 wallet = new Wallet { UserId = userId, Balance = amount };
-                _context.Wallets.Add(wallet);
+                await _walletRepo.AddAsync(wallet);
             }
             else
             {
                 wallet.Balance += amount;
+                _walletRepo.Update(wallet);
             }
 
-            _context.AuditLogs.Add(new AuditLog
+            await _auditRepo.AddAsync(new AuditLog
             {
                 ReferenceType = "Wallet",
                 ReferenceId = wallet.Id,
@@ -59,7 +62,8 @@ namespace LocaLe.EscrowApi.Services
                 Details = $"Credited ₦{amount:N2} to wallet. New balance: ₦{wallet.Balance:N2}."
             });
 
-            await _context.SaveChangesAsync();
+            await _walletRepo.SaveChangesAsync();
+            await _auditRepo.SaveChangesAsync();
 
             return new WalletResponse { UserId = wallet.UserId, Balance = wallet.Balance };
         }

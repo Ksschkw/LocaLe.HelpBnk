@@ -2,6 +2,8 @@ using System.Text;
 using System.Threading.RateLimiting;
 using LocaLe.EscrowApi.Data;
 using LocaLe.EscrowApi.Interfaces;
+using LocaLe.EscrowApi.Interfaces.Repositories;
+using LocaLe.EscrowApi.Repositories;
 using LocaLe.EscrowApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
@@ -30,12 +32,30 @@ else
 // ═══════════════════════════════════════════════════════════
 // 2. DEPENDENCY INJECTION — Services (loosely coupled)
 // ═══════════════════════════════════════════════════════════
+// 2b. REPOSITORIES
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IWalletRepository, WalletRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
+builder.Services.AddScoped<IJobRepository, JobRepository>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IEscrowRepository, EscrowRepository>();
+builder.Services.AddScoped<IDisputeRepository, DisputeRepository>();
+builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+builder.Services.AddScoped<IWaitlistRepository, WaitlistRepository>();
+builder.Services.AddScoped<IVouchRepository, VouchRepository>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+// 2c. SERVICES (Business Logic)
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IWalletService, WalletService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IEscrowService, EscrowService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<ICatalogService, CatalogService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IVouchService, VouchService>();
+builder.Services.AddScoped<IWaitlistService, WaitlistService>();
 
 // ═══════════════════════════════════════════════════════════
 // 3. AUTHENTICATION — JWT with HttpOnly Cookie support
@@ -79,6 +99,19 @@ builder.Services.AddAuthentication(options =>
 // 4. CONTROLLERS & RATE LIMITING
 // ═══════════════════════════════════════════════════════════
 builder.Services.AddControllers();
+
+// Add CORS to allow local testing from a frontend
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
 builder.Services.AddRateLimiter(options =>
 {
     options.AddFixedWindowLimiter("default", limiter =>
@@ -118,6 +151,14 @@ builder.Services.AddSwaggerGen(c =>
     {
         [new OpenApiSecuritySchemeReference("Bearer")] = new List<string>()
     });
+
+    // Use XML comments for Swagger
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        c.IncludeXmlComments(xmlPath);
+    }
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -129,7 +170,9 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<EscrowContext>();
-    context.Database.EnsureCreated();
+    context.Database.Migrate();
+    // Idempotent seeder: super admin + categories + seed services
+    await DbSeeder.SeedAsync(scope);
 }
 
 // Developer exception page — shows detailed errors in dev mode
@@ -156,6 +199,7 @@ app.UseReDoc(c =>
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseCors("AllowAll");
 app.MapControllers();
 
 app.Run();

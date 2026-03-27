@@ -31,9 +31,11 @@ namespace LocaLe.EscrowApi.DTOs
 
     public class AuthResponse
     {
-        public int UserId { get; set; }
+        public Guid UserId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
+        /// <summary>Role string: "User", "Admin", or "SuperAdmin".</summary>
+        public string Role { get; set; } = string.Empty;
         public string Token { get; set; } = string.Empty;
     }
 
@@ -50,14 +52,26 @@ namespace LocaLe.EscrowApi.DTOs
         public decimal Amount { get; set; }
     }
 
+    public class UpdateJobRequest
+    {
+        [MaxLength(200)]
+        public string? Title { get; set; }
+
+        [MaxLength(2000)]
+        public string? Description { get; set; }
+
+        public decimal? Amount { get; set; }
+        public string? Status { get; set; }
+    }
+
     public class JobResponse
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public decimal Amount { get; set; }
         public string Status { get; set; } = string.Empty;
-        public int CreatorId { get; set; }
+        public Guid CreatorId { get; set; }
         public string CreatorName { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
     }
@@ -77,10 +91,10 @@ namespace LocaLe.EscrowApi.DTOs
 
     public class BookingResponse
     {
-        public int Id { get; set; }
-        public int JobId { get; set; }
+        public Guid Id { get; set; }
+        public Guid JobId { get; set; }
         public string JobTitle { get; set; } = string.Empty;
-        public int ProviderId { get; set; }
+        public Guid ProviderId { get; set; }
         public string ProviderName { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
@@ -95,8 +109,8 @@ namespace LocaLe.EscrowApi.DTOs
 
     public class EscrowResponse
     {
-        public int Id { get; set; }
-        public int BookingId { get; set; }
+        public Guid Id { get; set; }
+        public Guid BookingId { get; set; }
         public decimal Amount { get; set; }
         public string Status { get; set; } = string.Empty;
         public string? QrToken { get; set; }
@@ -112,19 +126,127 @@ namespace LocaLe.EscrowApi.DTOs
 
     public class WalletResponse
     {
-        public int UserId { get; set; }
+        public Guid UserId { get; set; }
         public decimal Balance { get; set; }
     }
 
     // ─── Audit DTOs ──────────────────────────────────────────
     public class AuditLogResponse
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string ReferenceType { get; set; } = string.Empty;
-        public int ReferenceId { get; set; }
+        public Guid ReferenceId { get; set; }
         public string Action { get; set; } = string.Empty;
-        public int ActorId { get; set; }
+        public Guid ActorId { get; set; }
         public string Details { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }
+    }
+
+    // ─── Admin DTOs ──────────────────────────────────────────
+    public class AdminUserResponse
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public int TrustScore { get; set; }
+        public int VerificationLevel { get; set; }
+        public bool IsNinVerified { get; set; }
+        public string? AvatarUrl { get; set; }
+        public string? Phone { get; set; }
+        public string Tier { get; set; } = string.Empty;
+        public int TotalVouchPoints { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class SetRoleRequest
+    {
+        /// <summary>Target role: "User", "Admin", or "SuperAdmin". Only a SuperAdmin can set roles.</summary>
+        [Required]
+        public string Role { get; set; } = string.Empty;
+    }
+
+    public class CreateAdminRequest
+    {
+        [Required, MaxLength(100)]
+        public string Name { get; set; } = string.Empty;
+
+        [Required, EmailAddress, MaxLength(200)]
+        public string Email { get; set; } = string.Empty;
+
+        [Required, MinLength(6)]
+        public string Password { get; set; } = string.Empty;
+
+        /// <summary>Specific role: "Admin" or "SuperAdmin".</summary>
+        [Required]
+        public string Role { get; set; } = "Admin";
+    }
+
+    public class AdminJobResponse
+    {
+        public Guid Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public Guid CreatorId { get; set; }
+        public string CreatorName { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class AdminDisputeResponse
+    {
+        public Guid Id { get; set; }
+        public Guid JobId { get; set; }
+        public string JobTitle { get; set; } = string.Empty;
+        public Guid RaisedById { get; set; }
+        public string RaisedByName { get; set; } = string.Empty;
+        public string Reason { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string? AdminNotes { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class ResolveDisputeRequest
+    {
+        [Required, MaxLength(1000)]
+        public string Resolution { get; set; } = string.Empty;
+    }
+
+    public class PagedResult<T>
+    {
+        public List<T> Items { get; set; } = new();
+        public int TotalCount { get; set; }
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+        public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
+    }
+
+    // ─── Community DTOs ──────────────────────────────────────
+    public class VouchResponse
+    {
+        public Guid Id { get; set; }
+        public Guid ServiceId { get; set; }
+        public Guid VoucherId { get; set; }
+        public string VoucherName { get; set; } = string.Empty;
+        public int PointsGiven { get; set; }
+        public string? Comment { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class WaitlistResponse
+    {
+        public Guid Id { get; set; }
+        public Guid ServiceId { get; set; }
+        public string ServiceTitle { get; set; } = string.Empty;
+        public Guid UserId { get; set; }
+        public string UserName { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class AgreeWaitlistTermsRequest
+    {
+        public decimal InitialDepositPercent { get; set; }
     }
 }

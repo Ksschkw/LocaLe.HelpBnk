@@ -7,17 +7,17 @@ namespace LocaLe.EscrowApi.Models
     public class Message
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
-        public int JobId { get; set; }
+        public Guid JobId { get; set; }
 
         [ForeignKey("JobId")]
         [JsonIgnore]
         public Job? Job { get; set; }
 
         [Required]
-        public int SenderId { get; set; }
+        public Guid SenderId { get; set; }
 
         [ForeignKey("SenderId")]
         [JsonIgnore]

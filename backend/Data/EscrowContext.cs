@@ -13,6 +13,7 @@ namespace LocaLe.EscrowApi.Data
         public DbSet<Booking> Bookings => Set<Booking>();
         public DbSet<Escrow> Escrows => Set<Escrow>();
         public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+        public DbSet<Waitlist> Waitlists => Set<Waitlist>();
         
         // Phase 2: Catalog & Community
         public DbSet<ServiceCategory> ServiceCategories => Set<ServiceCategory>();
@@ -35,9 +36,8 @@ namespace LocaLe.EscrowApi.Data
             // ─── Wallet ──────────────────────────────────────
             modelBuilder.Entity<Wallet>(entity =>
             {
-                entity.HasIndex(w => w.UserId).IsUnique();
                 entity.HasOne(w => w.User)
-                      .WithOne()
+                      .WithOne(u => u.Wallet)
                       .HasForeignKey<Wallet>(w => w.UserId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
@@ -162,6 +162,20 @@ namespace LocaLe.EscrowApi.Data
             modelBuilder.Entity<AuditLog>(entity =>
             {
                 entity.HasIndex(a => new { a.ReferenceType, a.ReferenceId });
+            });
+
+            // ─── Waitlist ────────────────────────────────────
+            modelBuilder.Entity<Waitlist>(entity =>
+            {
+                entity.HasOne(w => w.Service)
+                      .WithMany()
+                      .HasForeignKey(w => w.ServiceId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(w => w.User)
+                      .WithMany()
+                      .HasForeignKey(w => w.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

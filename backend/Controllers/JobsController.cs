@@ -65,6 +65,44 @@ namespace LocaLe.EscrowApi.Controllers
             }
         }
 
+        /// <summary>
+        /// Update an existing job (must be the creator and the job must be Open).
+        /// </summary>
+        [Authorize]
+        [HttpPut("{id}")]
+        [ProducesResponseType(typeof(JobResponse), 200)]
+        public async Task<IActionResult> UpdateJob(int id, [FromBody] UpdateJobRequest request)
+        {
+            var userId = GetCurrentUserId();
+            try
+            {
+                var job = await _jobService.UpdateJobAsync(userId, id, request);
+                return Ok(job);
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { Error = ex.Message }); }
+            catch (UnauthorizedAccessException ex) { return Forbid(); }
+            catch (InvalidOperationException ex) { return BadRequest(new { Error = ex.Message }); }
+        }
+
+        /// <summary>
+        /// Delete an existing job (must be the creator and the job must be Open/Closed).
+        /// </summary>
+        [Authorize]
+        [HttpDelete("{id}")]
+        [ProducesResponseType(204)]
+        public async Task<IActionResult> DeleteJob(int id)
+        {
+            var userId = GetCurrentUserId();
+            try
+            {
+                await _jobService.DeleteJobAsync(userId, id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { Error = ex.Message }); }
+            catch (UnauthorizedAccessException ex) { return Forbid(); }
+            catch (InvalidOperationException ex) { return BadRequest(new { Error = ex.Message }); }
+        }
+
         private int GetCurrentUserId()
         {
             var claim = User.FindFirstValue(ClaimTypes.NameIdentifier)

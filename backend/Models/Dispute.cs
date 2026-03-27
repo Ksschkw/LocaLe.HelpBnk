@@ -7,20 +7,20 @@ namespace LocaLe.EscrowApi.Models
     public class Dispute
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         /// <summary>
         /// Tied to the Job/Booking that had the escrow disputed.
         /// </summary>
         [Required]
-        public int JobId { get; set; }
+        public Guid JobId { get; set; }
 
         [ForeignKey("JobId")]
         [JsonIgnore]
         public Job? Job { get; set; }
 
         [Required]
-        public int RaisedById { get; set; }
+        public Guid RaisedById { get; set; }
 
         [ForeignKey("RaisedById")]
         [JsonIgnore]

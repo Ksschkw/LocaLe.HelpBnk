@@ -5,12 +5,13 @@ namespace LocaLe.EscrowApi.Models
 {
     public class Wallet
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         /// <summary>
         /// Foreign key to User. One wallet per user.
         /// </summary>
-        public int UserId { get; set; }
+        [ForeignKey("User")]
+        public Guid UserId { get; set; }
         public User? User { get; set; }
 
         /// <summary>
@@ -39,25 +40,35 @@ namespace LocaLe.EscrowApi.Models
 
     public class Escrow
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         /// <summary>
         /// The booking this escrow is tied to.
         /// </summary>
-        public int BookingId { get; set; }
+        public Guid BookingId { get; set; }
         public Booking? Booking { get; set; }
 
         /// <summary>
         /// Redundant buyer/provider IDs for fast audit lookups
         /// without joining through Booking → Job → Creator.
         /// </summary>
-        public int BuyerId { get; set; }
-        public int ProviderId { get; set; }
+        public Guid BuyerId { get; set; }
+        public Guid ProviderId { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal Amount { get; set; }
 
         public EscrowStatus Status { get; set; } = EscrowStatus.Pending;
+
+        /// <summary>
+        /// What percentage of the total amount was deposited in the first phase.
+        /// e.g. 0.5 for 50%.
+        /// </summary>
+        public decimal InitialDepositPercentage { get; set; } = 1.0m;
+
+        public bool IsSecondPhaseFunded { get; set; } = false;
+
+        public decimal SecondPhaseAmount => Amount * (1 - InitialDepositPercentage);
 
         /// <summary>
         /// One-time QR verification token. 8-character uppercase string.
@@ -76,7 +87,7 @@ namespace LocaLe.EscrowApi.Models
 
     public class AuditLog
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         /// <summary>
         /// Generic reference system: tracks what entity this log is about.
@@ -85,7 +96,7 @@ namespace LocaLe.EscrowApi.Models
         [Required, MaxLength(50)]
         public string ReferenceType { get; set; } = string.Empty;
 
-        public int ReferenceId { get; set; }
+        public Guid ReferenceId { get; set; }
 
         [Required, MaxLength(50)]
         public string Action { get; set; } = string.Empty;
@@ -93,11 +104,34 @@ namespace LocaLe.EscrowApi.Models
         /// <summary>
         /// The user ID who performed this action.
         /// </summary>
-        public int ActorId { get; set; }
+        public Guid ActorId { get; set; }
 
         [MaxLength(500)]
         public string Details { get; set; } = string.Empty;
 
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    }
+
+    public enum WaitlistStatus
+    {
+        Pending,
+        Agreed,     // Terms met, ready for Job conversion
+        Negotiating,
+        Cancelled
+    }
+
+    public class Waitlist
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+
+        public Guid ServiceId { get; set; }
+        public Guid UserId { get; set; }
+        public User? User { get; set; }
+
+        public WaitlistStatus Status { get; set; } = WaitlistStatus.Pending;
+
+        public string? PrivateNotes { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

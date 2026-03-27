@@ -7,7 +7,7 @@ namespace LocaLe.EscrowApi.Models
     public class ServiceCategory
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
         [MaxLength(100)]
@@ -19,7 +19,7 @@ namespace LocaLe.EscrowApi.Models
         [MaxLength(200)]
         public string? IconUrl { get; set; }
 
-        public int? ParentId { get; set; }
+        public Guid? ParentId { get; set; }
 
         [ForeignKey("ParentId")]
         [JsonIgnore]

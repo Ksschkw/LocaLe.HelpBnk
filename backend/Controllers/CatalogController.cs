@@ -19,13 +19,14 @@ namespace LocaLe.EscrowApi.Controllers
         }
 
         /// <summary>
-        /// Get all root categories (or subcategories if parentId is provided).
+        /// Get all root categories. Each root category includes its full tree of subcategories.
+        /// No parentId guessing required.
         /// </summary>
         [HttpGet("categories")]
         [ProducesResponseType(typeof(List<CategoryResponse>), 200)]
-        public async Task<IActionResult> GetCategories([FromQuery] int? parentId)
+        public async Task<IActionResult> GetCategoriesTree()
         {
-            var cats = await _catalogService.GetCategoriesAsync(parentId);
+            var cats = await _catalogService.GetCategoriesTreeAsync();
             return Ok(cats);
         }
 
@@ -33,7 +34,7 @@ namespace LocaLe.EscrowApi.Controllers
         /// Get a specific category and its immediate subcategories.
         /// </summary>
         [HttpGet("categories/{id}")]
-        [ProducesResponseType(typeof(CategoryDetailResponse), 200)]
+        [ProducesResponseType(typeof(CategoryResponse), 200)]
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetCategory(int id)
         {
@@ -67,6 +68,23 @@ namespace LocaLe.EscrowApi.Controllers
         }
 
         /// <summary>
+        /// Browse all active services. Optionally filter by category slug/name or search by keyword.
+        /// No authentication required — anyone can browse the marketplace.
+        /// </summary>
+        [HttpGet("services")]
+        [ProducesResponseType(typeof(List<ServiceResponse>), 200)]
+        public async Task<IActionResult> GetAllServices(
+            [FromQuery] string? search = null,
+            [FromQuery] string? categoryName = null,
+            [FromQuery] decimal? lat = null,
+            [FromQuery] decimal? lng = null,
+            [FromQuery] decimal? radiusKm = 10.0m) // Default 10km radius
+        {
+            var services = await _catalogService.GetAllServicesAsync(search, categoryName, lat, lng, radiusKm);
+            return Ok(services);
+        }
+
+        /// <summary>
         /// Post a new service to the catalog (you become the provider).
         /// Requires authentication.
         /// </summary>
@@ -87,6 +105,42 @@ namespace LocaLe.EscrowApi.Controllers
             {
                 return BadRequest(new { Error = ex.Message });
             }
+        }
+
+        /// <summary>
+        /// Update an existing service (must be the provider).
+        /// </summary>
+        [Authorize]
+        [HttpPut("services/{id}")]
+        [ProducesResponseType(typeof(ServiceResponse), 200)]
+        public async Task<IActionResult> UpdateService(int id, [FromBody] UpdateServiceRequest request)
+        {
+            var providerId = GetCurrentUserId();
+            try
+            {
+                var s = await _catalogService.UpdateServiceAsync(providerId, id, request);
+                return Ok(s);
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { Error = ex.Message }); }
+            catch (UnauthorizedAccessException ex) { return Forbid(); }
+        }
+
+        /// <summary>
+        /// Delete an existing service (must be the provider).
+        /// </summary>
+        [Authorize]
+        [HttpDelete("services/{id}")]
+        [ProducesResponseType(204)]
+        public async Task<IActionResult> DeleteService(int id)
+        {
+            var providerId = GetCurrentUserId();
+            try
+            {
+                await _catalogService.DeleteServiceAsync(providerId, id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { Error = ex.Message }); }
+            catch (UnauthorizedAccessException ex) { return Forbid(); }
         }
 
         private int GetCurrentUserId()

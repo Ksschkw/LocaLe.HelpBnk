@@ -7,24 +7,24 @@ namespace LocaLe.EscrowApi.Models
     public class Review
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
-        public int JobId { get; set; }
+        public Guid JobId { get; set; }
 
         [ForeignKey("JobId")]
         [JsonIgnore]
         public Job? Job { get; set; }
 
         [Required]
-        public int ReviewerId { get; set; }
+        public Guid ReviewerId { get; set; }
 
         [ForeignKey("ReviewerId")]
         [JsonIgnore]
         public User? Reviewer { get; set; }
 
         [Required]
-        public int RevieweeId { get; set; }
+        public Guid RevieweeId { get; set; }
 
         [ForeignKey("RevieweeId")]
         [JsonIgnore]

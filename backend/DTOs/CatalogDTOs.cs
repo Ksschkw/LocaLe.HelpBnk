@@ -2,24 +2,24 @@ namespace LocaLe.EscrowApi.DTOs
 {
     public class CategoryResponse
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string? IconUrl { get; set; }
-        public int? ParentId { get; set; }
-    }
-
-    public class CategoryDetailResponse : CategoryResponse
-    {
+        public Guid? ParentId { get; set; }
+        
+        /// <summary>
+        /// Populated for root categories to contain all subcategories in one tree.
+        /// </summary>
         public List<CategoryResponse> SubCategories { get; set; } = new List<CategoryResponse>();
     }
 
     public class ServiceResponse
     {
-        public int Id { get; set; }
-        public int ProviderId { get; set; }
+        public Guid Id { get; set; }
+        public Guid ProviderId { get; set; }
         public string ProviderName { get; set; } = string.Empty;
-        public int CategoryId { get; set; }
+        public Guid CategoryId { get; set; }
         public string CategoryName { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
@@ -27,14 +27,33 @@ namespace LocaLe.EscrowApi.DTOs
         public decimal HourlyRate { get; set; }
         public string Status { get; set; } = string.Empty;
         public int TrustPoints { get; set; }
+        public bool IsDiscoveryEnabled { get; set; }
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
+        public string? AreaName { get; set; }
     }
 
     public class CreateServiceRequest
     {
-        public int CategoryId { get; set; }
+        public Guid CategoryId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public decimal BasePrice { get; set; }
         public decimal HourlyRate { get; set; }
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
+        public string? AreaName { get; set; }
+    }
+
+    public class UpdateServiceRequest
+    {
+        public string? Title { get; set; }
+        public string? Description { get; set; }
+        public decimal? BasePrice { get; set; }
+        public decimal? HourlyRate { get; set; }
+        public string? Status { get; set; }
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
+        public string? AreaName { get; set; }
     }
 }

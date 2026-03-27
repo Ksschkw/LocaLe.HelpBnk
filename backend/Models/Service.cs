@@ -7,17 +7,17 @@ namespace LocaLe.EscrowApi.Models
     public class Service
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
-        public int ProviderId { get; set; }
+        public Guid ProviderId { get; set; }
 
         [ForeignKey("ProviderId")]
         [JsonIgnore]
         public User? Provider { get; set; }
 
         [Required]
-        public int CategoryId { get; set; }
+        public Guid CategoryId { get; set; }
 
         [ForeignKey("CategoryId")]
         [JsonIgnore]
@@ -41,6 +41,17 @@ namespace LocaLe.EscrowApi.Models
         public string Status { get; set; } = "Active"; // Active, Paused, Unlisted
 
         public int TrustPoints { get; set; } = 0;
+
+        // Proximity & Discovery
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal? Latitude { get; set; }
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal? Longitude { get; set; }
+        [MaxLength(100)]
+        public string? AreaName { get; set; }
+
+        public int RequiredVouchPoints { get; set; } = 50; // Threshold to enable
+        public bool IsDiscoveryEnabled { get; set; } = false;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

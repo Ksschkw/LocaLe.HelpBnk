@@ -12,18 +12,18 @@ namespace LocaLe.EscrowApi.Models
 
     public class Booking
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         /// <summary>
         /// The job this booking is for.
         /// </summary>
-        public int JobId { get; set; }
+        public Guid JobId { get; set; }
         public Job? Job { get; set; }
 
         /// <summary>
         /// The user who accepted the job (the Provider).
         /// </summary>
-        public int ProviderId { get; set; }
+        public Guid ProviderId { get; set; }
         public User? Provider { get; set; }
 
         public BookingStatus Status { get; set; } = BookingStatus.Pending;

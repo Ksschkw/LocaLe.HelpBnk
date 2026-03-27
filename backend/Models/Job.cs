@@ -13,7 +13,7 @@ namespace LocaLe.EscrowApi.Models
 
     public class Job
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required, MaxLength(200)]
         public string Title { get; set; } = string.Empty;
@@ -31,7 +31,7 @@ namespace LocaLe.EscrowApi.Models
         /// <summary>
         /// The user who posted this job (the Buyer/Hirer).
         /// </summary>
-        public int CreatorId { get; set; }
+        public Guid CreatorId { get; set; }
         public User? Creator { get; set; }
 
         public JobStatus Status { get; set; } = JobStatus.Open;
@@ -42,7 +42,7 @@ namespace LocaLe.EscrowApi.Models
         /// Optional link back to a Service if this Job was created
         /// by a Buyer directly hiring a Provider from the catalog.
         /// </summary>
-        public int? ServiceId { get; set; }
+        public Guid? ServiceId { get; set; }
         public Service? Service { get; set; }
     }
 }

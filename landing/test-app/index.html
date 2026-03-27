@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocaLe Prototype Frontend</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>LocaLe Prototype</h1>
+            <div id="auth-status">
+                <span id="user-info">Not logged in</span>
+                <span id="wallet-info"></span>
+                <button id="logout-btn" style="display: none;">Logout</button>
+            </div>
+        </header>
+
+        <main>
+            <!-- AUTH SECTION -->
+            <section id="auth-section">
+                <h2>Authentication</h2>
+                <div class="forms">
+                    <form id="login-form">
+                        <h3>Login</h3>
+                        <input type="email" id="login-email" placeholder="Email" required>
+                        <input type="password" id="login-password" placeholder="Password" required>
+                        <button type="submit">Login</button>
+                    </form>
+                    <form id="register-form">
+                        <h3>Register</h3>
+                        <input type="text" id="reg-name" placeholder="Full Name" required>
+                        <input type="email" id="reg-email" placeholder="Email" required>
+                        <input type="password" id="reg-password" placeholder="Password" required>
+                        <button type="submit">Register</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- CATALOG SECTION -->
+            <section id="catalog-section">
+                <h2>Service Catalog</h2>
+                <div class="controls">
+                    <input type="text" id="search-input" placeholder="Search services...">
+                    <button id="search-btn">Search</button>
+                    <button id="load-cats-btn">Load Categories</button>
+                </div>
+                <div id="categories-container" class="grid-container"></div>
+                <div id="services-container" class="grid-container"></div>
+            </section>
+
+            <!-- ESCROW / JOB SECTION -->
+            <section id="escrow-section" style="display: none;">
+                <h2>Escrow & Jobs Flow</h2>
+                
+                <div class="grid-container">
+                    <!-- Top Up Wallet -->
+                    <div class="card">
+                        <h3>Test Wallet</h3>
+                        <p>Simulate funding your wallet.</p>
+                        <input type="number" id="topup-amount" placeholder="Amount (e.g. 50000)">
+                        <button id="topup-btn">Top Up</button>
+                    </div>
+
+                    <!-- Post a Job -->
+                    <div class="card">
+                        <h3>Post a Custom Job</h3>
+                        <input type="text" id="job-title" placeholder="Job Title" required>
+                        <input type="text" id="job-desc" placeholder="Description">
+                        <input type="number" id="job-amount" placeholder="Amount (e.g. 15000)" required>
+                        <button id="post-job-btn">Post Job</button>
+                    </div>
+                </div>
+
+                <h3>Available Open Jobs</h3>
+                <button id="load-jobs-btn">Refresh Jobs</button>
+                <div id="jobs-list"></div>
+
+                <h3>My Active Bookings / Escrows</h3>
+                <button id="load-bookings-btn">Refresh Bookings</button>
+                <div id="bookings-list"></div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

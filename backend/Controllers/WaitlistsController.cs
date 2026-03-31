@@ -21,7 +21,7 @@ namespace LocaLe.EscrowApi.Controllers
 
         [Authorize]
         [HttpPost("{serviceId}")]
-        public async Task<IActionResult> JoinWaitlist(int serviceId, [FromBody] string? notes)
+        public async Task<IActionResult> JoinWaitlist(Guid serviceId, [FromBody] string? notes)
         {
             var userId = GetCurrentUserId();
             try
@@ -56,7 +56,7 @@ namespace LocaLe.EscrowApi.Controllers
 
         [Authorize]
         [HttpPost("{id}/agree")]
-        public async Task<IActionResult> AgreeToTerms(int id, [FromBody] AgreeWaitlistTermsRequest request)
+        public async Task<IActionResult> AgreeToTerms(Guid id, [FromBody] AgreeWaitlistTermsRequest request)
         {
             var userId = GetCurrentUserId();
             try
@@ -69,11 +69,11 @@ namespace LocaLe.EscrowApi.Controllers
             catch (UnauthorizedAccessException) { return Forbid(); }
         }
 
-        private int GetCurrentUserId()
+        private Guid GetCurrentUserId()
         {
             var claim = User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? throw new UnauthorizedAccessException("User ID not found in token.");
-            return int.Parse(claim);
+            return Guid.Parse(claim);
         }
     }
 }

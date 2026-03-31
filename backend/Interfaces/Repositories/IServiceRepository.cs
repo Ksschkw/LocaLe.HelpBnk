@@ -7,5 +7,7 @@ namespace LocaLe.EscrowApi.Interfaces.Repositories
         Task<Service?> GetServiceDetailedAsync(Guid id);
         Task<IEnumerable<Service>> GetServicesByCategoryIdAsync(Guid categoryId);
         Task<IEnumerable<Service>> SearchServicesAsync(string? query, string? categoryName, decimal? lat = null, decimal? lng = null, decimal? radiusKm = null);
+        Task<IEnumerable<Service>> GetServicesByProviderIdAsync(Guid providerId);
+        Task<IEnumerable<Service>> GetAllActiveServicesDetailedAsync();
     }
 }

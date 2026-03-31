@@ -14,17 +14,28 @@ namespace LocaLe.EscrowApi.Repositories
         public async Task<Escrow?> GetEscrowDetailedAsync(Guid id)
         {
             return await _dbSet
-                .Include(e => e.Booking)
-                .ThenInclude(b => b.Job)
+                .Include(e => e.Booking!)
+                    .ThenInclude(b => b.Job!)
+                .Include(e => e.Buyer)
+                .Include(e => e.Provider)
                 .FirstOrDefaultAsync(e => e.Id == id);
         }
 
         public async Task<Escrow?> GetByBookingIdAsync(Guid bookingId)
         {
             return await _dbSet
-                .Include(e => e.Booking)
-                .ThenInclude(b => b.Job)
+                .Include(e => e.Booking!)
+                    .ThenInclude(b => b.Job!)
+                .Include(e => e.Buyer)
+                .Include(e => e.Provider)
                 .FirstOrDefaultAsync(e => e.BookingId == bookingId);
+        }
+
+        public async Task<List<Escrow>> GetByProviderIdAsync(Guid providerId)
+        {
+            return await _dbSet
+                .Where(e => e.ProviderId == providerId)
+                .ToListAsync();
         }
     }
 }

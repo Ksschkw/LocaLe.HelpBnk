@@ -16,6 +16,8 @@ namespace LocaLe.EscrowApi.Repositories
             return await _dbSet
                 .Where(c => c.ParentId == null) // Root categories
                 .Include(c => c.SubCategories)
+                    .ThenInclude(s => s.Services) // Load nested services
+                .Include(c => c.Services) // Load direct services
                 .ToListAsync();
         }
 
@@ -23,6 +25,8 @@ namespace LocaLe.EscrowApi.Repositories
         {
             return await _dbSet
                 .Include(c => c.SubCategories)
+                    .ThenInclude(s => s.Services)
+                .Include(c => c.Services)
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
     }

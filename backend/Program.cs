@@ -1,5 +1,6 @@
 using System.Text;
 using System.Threading.RateLimiting;
+using System.IO.Compression;
 using LocaLe.EscrowApi.Data;
 using LocaLe.EscrowApi.Interfaces;
 using LocaLe.EscrowApi.Interfaces.Repositories;
@@ -7,6 +8,7 @@ using LocaLe.EscrowApi.Repositories;
 using LocaLe.EscrowApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -52,10 +54,32 @@ builder.Services.AddScoped<IWalletService, WalletService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IEscrowService, EscrowService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
-builder.Services.AddScoped<ICatalogService, CatalogService>();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IServicesService, ServicesService>();
+builder.Services.AddScoped<ISearchService, SearchService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IVouchService, VouchService>();
 builder.Services.AddScoped<IWaitlistService, WaitlistService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+
+// ═══════════════════════════════════════════════════════════
+// Response Compression — Brotli first, then Gzip fallback
+// Reduces API payload size by 60-80% for JSON responses
+// ═══════════════════════════════════════════════════════════
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat([
+        "application/json", "text/plain", "text/html", "application/javascript"
+    ]);
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(o => o.Level = CompressionLevel.Fastest);
+builder.Services.Configure<GzipCompressionProviderOptions>(o => o.Level = CompressionLevel.Fastest);
+
+// Add background workers
+builder.Services.AddHostedService<StuckEscrowMonitorService>();
 
 // ═══════════════════════════════════════════════════════════
 // 3. AUTHENTICATION — JWT with HttpOnly Cookie support
@@ -161,6 +185,14 @@ builder.Services.AddSwaggerGen(c =>
     }
 });
 
+// Add HTTP Logging for terminal visibility (like FastAPI/uvicorn)
+builder.Services.AddHttpLogging(logging =>
+{
+    logging.LoggingFields = Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.All;
+    logging.RequestBodyLogLimit = 4096;
+    logging.ResponseBodyLogLimit = 4096;
+});
+
 // ═══════════════════════════════════════════════════════════
 // BUILD & CONFIGURE PIPELINE
 // ═══════════════════════════════════════════════════════════
@@ -197,9 +229,15 @@ app.UseReDoc(c =>
     c.RoutePrefix = "redoc";
 });
 
+app.UseStaticFiles();
+app.UseRouting();
+app.UseResponseCompression();
+app.UseHttpLogging();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseCors("AllowAll");
+app.UseMiddleware<LocaLe.EscrowApi.Middleware.IdempotencyMiddleware>();
 app.MapControllers();
+app.MapFallbackToFile("index.html");
 
 app.Run();

@@ -11,7 +11,7 @@ namespace LocaLe.EscrowApi.Repositories
         {
         }
 
-        public async Task<IEnumerable<Waitlist>> GetByServiceIdAsync(int serviceId)
+        public async Task<IEnumerable<Waitlist>> GetByServiceIdAsync(Guid serviceId)
         {
             return await _dbSet
                 .Include(w => w.User)
@@ -19,7 +19,7 @@ namespace LocaLe.EscrowApi.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Waitlist>> GetByUserIdAsync(int userId)
+        public async Task<IEnumerable<Waitlist>> GetByUserIdAsync(Guid userId)
         {
             return await _dbSet
                 .Include(w => w.Service)
@@ -27,7 +27,7 @@ namespace LocaLe.EscrowApi.Repositories
                 .ToListAsync();
         }
 
-        public async Task<Waitlist?> GetWithDetailsAsync(int id)
+        public async Task<Waitlist?> GetWithDetailsAsync(Guid id)
         {
             return await _dbSet
                 .Include(w => w.Service)

@@ -34,7 +34,7 @@ namespace LocaLe.EscrowApi.Services
             _auditRepo = auditRepo;
         }
 
-        public async Task JoinWaitlistAsync(int serviceId, int userId, string? notes)
+        public async Task JoinWaitlistAsync(Guid serviceId, Guid userId, string? notes)
         {
             var service = await _serviceRepo.GetByIdAsync(serviceId)
                 ?? throw new KeyNotFoundException("Service not found.");
@@ -59,17 +59,17 @@ namespace LocaLe.EscrowApi.Services
                 ReferenceId = waitlist.Id,
                 Action = "JoinedWaitlist",
                 ActorId = userId,
-                Details = $"User joined waitlist for service #{serviceId}."
+                Details = $"User joined waitlist for service {serviceId}."
             });
             await _auditRepo.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<Waitlist>> GetUserWaitlistAsync(int userId)
+        public async Task<IEnumerable<Waitlist>> GetUserWaitlistAsync(Guid userId)
         {
             return await _waitlistRepo.GetByUserIdAsync(userId);
         }
 
-        public async Task AgreeToTermsAsync(int waitlistId, int userId, decimal initialDepositPercent)
+        public async Task AgreeToTermsAsync(Guid waitlistId, Guid userId, decimal initialDepositPercent)
         {
             var waitlist = await _waitlistRepo.GetWithDetailsAsync(waitlistId)
                 ?? throw new KeyNotFoundException("Waitlist entry not found.");
@@ -95,10 +95,6 @@ namespace LocaLe.EscrowApi.Services
 
             // Automatically apply and confirm to bypass manual steps if agreed
             var booking = await _bookingService.ApplyToJobAsync(job.Id, waitlist.Service!.ProviderId);
-            
-            // Note: The Escrow phase 1 (partial deposit) will be handled in the EscrowService
-            // which we'll update next. For now, we use the booking confirm which normally locks 100%.
-            // We'll update the EscrowService logic to look for a special flag or percentage.
             
             await _bookingService.ConfirmBookingAsync(booking.Id, userId, initialDepositPercent);
 

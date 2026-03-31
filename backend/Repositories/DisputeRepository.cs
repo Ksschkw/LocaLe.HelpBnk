@@ -20,7 +20,7 @@ namespace LocaLe.EscrowApi.Repositories
                 .ToListAsync();
         }
 
-        public async Task<Dispute?> GetDisputeWithJobAsync(Guid id)
+        public async Task<Dispute?> GetDisputeDetailedAsync(Guid id)
         {
             return await _dbSet
                 .Include(d => d.Job)

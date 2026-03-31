@@ -11,7 +11,7 @@ namespace LocaLe.EscrowApi.Repositories
         {
         }
 
-        public async Task<Wallet?> GetByUserIdAsync(int userId)
+        public async Task<Wallet?> GetByUserIdAsync(Guid userId)
         {
             return await _dbSet.FirstOrDefaultAsync(w => w.UserId == userId);
         }

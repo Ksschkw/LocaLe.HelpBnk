@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace LocaLe.EscrowApi.Models
 {
@@ -53,7 +54,9 @@ namespace LocaLe.EscrowApi.Models
         /// without joining through Booking → Job → Creator.
         /// </summary>
         public Guid BuyerId { get; set; }
+        public User? Buyer { get; set; }
         public Guid ProviderId { get; set; }
+        public User? Provider { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal Amount { get; set; }
@@ -76,6 +79,8 @@ namespace LocaLe.EscrowApi.Models
         [MaxLength(8)]
         public string? QrToken { get; set; }
 
+        public DateTime? QrTokenExpiry { get; set; }
+
         /// <summary>
         /// Concurrency token — prevents double-release race conditions.
         /// </summary>
@@ -97,6 +102,11 @@ namespace LocaLe.EscrowApi.Models
         public string ReferenceType { get; set; } = string.Empty;
 
         public Guid ReferenceId { get; set; }
+
+        /// <summary>
+        /// Optional JobId to link all events belonging to a single transaction flow.
+        /// </summary>
+        public Guid? JobId { get; set; }
 
         [Required, MaxLength(50)]
         public string Action { get; set; } = string.Empty;
@@ -125,6 +135,7 @@ namespace LocaLe.EscrowApi.Models
         public Guid Id { get; set; } = Guid.NewGuid();
 
         public Guid ServiceId { get; set; }
+        public Service? Service { get; set; }
         public Guid UserId { get; set; }
         public User? User { get; set; }
 
@@ -134,4 +145,66 @@ namespace LocaLe.EscrowApi.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
+
+    public class IdempotencyRecord
+    {
+        [Key]
+        [MaxLength(255)]
+        public string IdempotencyKey { get; set; } = string.Empty;
+
+        public int StatusCode { get; set; }
+
+        public string? ResponseBody { get; set; }
+
+        [MaxLength(255)]
+        public string RequestPath { get; set; } = string.Empty;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    public enum NotificationType
+    {
+        NewMessage,
+        BookingReceived,
+        BookingAccepted,
+        EscrowLocked,
+        EscrowReleased,
+        JobCompleted,
+        DisputeRaised,
+        DisputeResolved,
+        WaitlistAgreed,
+        DirectJobRequest
+    }
+
+    public class Notification
+    {
+        [Key]
+        public Guid Id { get; set; } = Guid.NewGuid();
+
+        [Required]
+        public Guid UserId { get; set; }
+
+        [ForeignKey("UserId")]
+        [JsonIgnore]
+        public User? User { get; set; }
+
+        public NotificationType Type { get; set; }
+
+        [Required, MaxLength(200)]
+        public string Title { get; set; } = string.Empty;
+
+        [MaxLength(500)]
+        public string Body { get; set; } = string.Empty;
+
+        /// <summary>Reference entity ID (JobId, BookingId, etc.) for deep-linking.</summary>
+        public Guid? ReferenceId { get; set; }
+
+        [MaxLength(50)]
+        public string? ReferenceType { get; set; }
+
+        public bool IsRead { get; set; } = false;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
 }
+

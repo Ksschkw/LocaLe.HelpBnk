@@ -18,5 +18,14 @@ namespace LocaLe.EscrowApi.Repositories
                 .Take(count)
                 .ToListAsync();
         }
+
+        public async Task<List<AuditLog>> GetForUserAsync(Guid userId)
+        {
+            return await _dbSet
+                .Where(a => a.ActorId == userId)
+                .OrderByDescending(a => a.Timestamp)
+                .Take(100)
+                .ToListAsync();
+        }
     }
 }

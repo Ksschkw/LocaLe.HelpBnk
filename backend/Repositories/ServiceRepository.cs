@@ -11,7 +11,7 @@ namespace LocaLe.EscrowApi.Repositories
         {
         }
 
-        public async Task<Service?> GetServiceDetailedAsync(int id)
+        public async Task<Service?> GetServiceDetailedAsync(Guid id)
         {
             return await _dbSet
                 .Include(s => s.Provider)
@@ -19,7 +19,7 @@ namespace LocaLe.EscrowApi.Repositories
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 
-        public async Task<IEnumerable<Service>> GetServicesByCategoryIdAsync(int categoryId)
+        public async Task<IEnumerable<Service>> GetServicesByCategoryIdAsync(Guid categoryId)
         {
             return await _dbSet
                 .Include(s => s.Provider)
@@ -39,13 +39,20 @@ namespace LocaLe.EscrowApi.Repositories
             if (!string.IsNullOrWhiteSpace(categoryName))
             {
                 var lowerCat = categoryName.ToLower();
-                sq = sq.Where(s => s.Category != null && s.Category.Name.ToLower().Contains(lowerCat));
+                sq = sq.Where(s => s.Category != null && (s.Category.Name.ToLower().Contains(lowerCat) || (s.Category.Description != null && s.Category.Description.ToLower().Contains(lowerCat))));
             }
 
             if (!string.IsNullOrWhiteSpace(query))
             {
                 var lowerQ = query.ToLower();
-                sq = sq.Where(s => s.Title.ToLower().Contains(lowerQ) || s.Description.ToLower().Contains(lowerQ));
+                // "Social media style" keyword search: check everything
+                sq = sq.Where(s => 
+                    s.Title.ToLower().Contains(lowerQ) || 
+                    s.Description.ToLower().Contains(lowerQ) ||
+                    (s.AreaName != null && s.AreaName.ToLower().Contains(lowerQ)) ||
+                    (s.Provider != null && s.Provider.Name.ToLower().Contains(lowerQ)) ||
+                    (s.Category != null && s.Category.Name.ToLower().Contains(lowerQ))
+                );
             }
 
             // Simple bounding box for proximity (approx 1 degree = 111km)
@@ -61,7 +68,28 @@ namespace LocaLe.EscrowApi.Repositories
                                    s.Longitude >= minLng && s.Longitude <= maxLng);
             }
 
+            // Order by reputation (TrustPoints) to give "best" results first
             return await sq.OrderByDescending(s => s.TrustPoints).ToListAsync();
+        }
+
+        public async Task<IEnumerable<Service>> GetServicesByProviderIdAsync(Guid providerId)
+        {
+            return await _dbSet
+                .Include(s => s.Provider)
+                .Include(s => s.Category)
+                .Where(s => s.ProviderId == providerId)
+                .OrderByDescending(s => s.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Service>> GetAllActiveServicesDetailedAsync()
+        {
+            return await _dbSet
+                .Include(s => s.Provider)
+                .Include(s => s.Category)
+                .Where(s => s.Status == "Active" && s.IsDiscoveryEnabled)
+                .OrderByDescending(s => s.TrustPoints)
+                .ToListAsync();
         }
     }
 }

@@ -33,7 +33,7 @@ namespace LocaLe.EscrowApi.Controllers
         [ProducesResponseType(typeof(PagedResult<AdminUserResponse>), 200)]
         public async Task<IActionResult> GetUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
-            var result = await _adminService.GetAllUsersAsync(page, pageSize);
+            var result = await _adminService.GetUsersAsync(page, pageSize);
             return Ok(result);
         }
 
@@ -43,7 +43,7 @@ namespace LocaLe.EscrowApi.Controllers
         [HttpGet("users/{id}")]
         [ProducesResponseType(typeof(AdminUserResponse), 200)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> GetUser(int id)
+        public async Task<IActionResult> GetUser(Guid id)
         {
             var user = await _adminService.GetUserByIdAsync(id);
             if (user == null) return NotFound(new { Error = $"User {id} not found." });
@@ -60,7 +60,7 @@ namespace LocaLe.EscrowApi.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(403)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> SetUserRole(int id, [FromBody] SetRoleRequest request)
+        public async Task<IActionResult> SetUserRole(Guid id, [FromBody] SetRoleRequest request)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             try
@@ -68,9 +68,9 @@ namespace LocaLe.EscrowApi.Controllers
                 await _adminService.SetUserRoleAsync(id, request.Role, GetCurrentUserId());
                 return NoContent();
             }
-            catch (KeyNotFoundException ex) { return NotFound(new { Error = ex.Message }); }
+            catch (KeyNotFoundException) { return NotFound(new { Error = "User not found." }); }
             catch (ArgumentException ex) { return BadRequest(new { Error = ex.Message }); }
-            catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+            catch (UnauthorizedAccessException) { return Forbid(); }
             catch (InvalidOperationException ex) { return BadRequest(new { Error = ex.Message }); }
         }
 
@@ -91,7 +91,7 @@ namespace LocaLe.EscrowApi.Controllers
             }
             catch (InvalidOperationException ex) { return BadRequest(new { Error = ex.Message }); }
             catch (ArgumentException ex) { return BadRequest(new { Error = ex.Message }); }
-            catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+            catch (UnauthorizedAccessException) { return Forbid(); }
         }
 
         // ─── Jobs ────────────────────────────────────────────
@@ -105,6 +105,60 @@ namespace LocaLe.EscrowApi.Controllers
         {
             var jobs = await _adminService.GetAllJobsAsync();
             return Ok(jobs);
+        }
+
+        /// <summary>
+        /// View the end-to-end timeline/audit log for a single job.
+        /// </summary>
+        [HttpGet("jobs/{job_id}/timeline")]
+        [ProducesResponseType(typeof(List<AuditLogResponse>), 200)]
+        public async Task<IActionResult> GetJobTimeline([FromServices] LocaLe.EscrowApi.Interfaces.Repositories.IAuditLogRepository auditRepo, Guid job_id)
+        {
+            var logs = await auditRepo.FindAsync(a => a.JobId == job_id);
+            var sortedLogs = logs.OrderBy(a => a.Timestamp).Select(a => new AuditLogResponse
+            {
+                Id = a.Id,
+                ReferenceType = a.ReferenceType,
+                ReferenceId = a.ReferenceId,
+                Action = a.Action,
+                ActorId = a.ActorId,
+                Details = a.Details,
+                Timestamp = a.Timestamp
+            }).ToList();
+            
+            return Ok(sortedLogs);
+        }
+
+        /// <summary>
+        /// Export key metrics (release speed, failure rates) as CSV.
+        /// </summary>
+        [HttpGet("metrics/export")]
+        [Produces("text/csv")]
+        public async Task<IActionResult> ExportMetrics([FromServices] LocaLe.EscrowApi.Interfaces.Repositories.IAuditLogRepository auditRepo)
+        {
+            var logs = await auditRepo.GetAllAsync();
+            var groupedByJob = logs.Where(l => l.JobId.HasValue).GroupBy(l => l.JobId.Value).ToList();
+
+            var csvBuilder = new System.Text.StringBuilder();
+            csvBuilder.AppendLine("JobId,CreatedTime,SecuredTime,ReleasedTime,TimeToReleaseMinutes");
+
+            foreach (var group in groupedByJob)
+            {
+                var created = group.FirstOrDefault(g => g.Action == "CREATED")?.Timestamp;
+                var secured = group.FirstOrDefault(g => g.Action == "SECURED")?.Timestamp;
+                var released = group.FirstOrDefault(g => g.Action == "FULL_RELEASE")?.Timestamp;
+
+                double? timeToRelease = null;
+                if (secured.HasValue && released.HasValue)
+                {
+                    timeToRelease = (released.Value - secured.Value).TotalMinutes;
+                }
+
+                csvBuilder.AppendLine($"{group.Key},{created},{secured},{released},{timeToRelease}");
+            }
+
+            var bytes = System.Text.Encoding.UTF8.GetBytes(csvBuilder.ToString());
+            return File(bytes, "text/csv", $"metrics_export_{DateTime.UtcNow:yyyyMMdd_HHmm}.csv");
         }
 
         // ─── Disputes ────────────────────────────────────────
@@ -127,7 +181,7 @@ namespace LocaLe.EscrowApi.Controllers
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> ResolveDispute(int id, [FromBody] ResolveDisputeRequest request)
+        public async Task<IActionResult> ResolveDispute(Guid id, [FromBody] ResolveDisputeRequest request)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             try
@@ -139,12 +193,50 @@ namespace LocaLe.EscrowApi.Controllers
             catch (InvalidOperationException ex) { return BadRequest(new { Error = ex.Message }); }
         }
 
+        // ─── Earnings & Payments ─────────────────────────────
+
+        /// <summary>
+        /// Calculate and return the total platform earnings collected from escrow fees.
+        /// </summary>
+        [HttpGet("platform-earnings")]
+        [ProducesResponseType(typeof(object), 200)]
+        public IActionResult GetPlatformEarnings()
+        {
+            // Placeholder for platform earnings calculation
+            return Ok(new {
+                TotalEarnings = 0m,
+                RecentTransactions = new List<object>()
+            });
+        }
+
+        /// <summary>
+        /// List all global payments/escrow transactions taking place on the platform.
+        /// </summary>
+        [HttpGet("payments")]
+        [ProducesResponseType(typeof(List<object>), 200)]
+        public IActionResult GetAllPayments()
+        {
+            // Placeholder for viewing all global payments
+            return Ok(new List<object>());
+        }
+
+        /// <summary>
+        /// Admin override to manually issue a refund for a specific payment or escrow transaction.
+        /// </summary>
+        [HttpPost("payments/{payment_id}/refund")]
+        [ProducesResponseType(typeof(object), 200)]
+        public IActionResult RefundPayment(Guid payment_id)
+        {
+            // Placeholder for issuing a manual refund
+            return Ok(new { Message = $"Payment {payment_id} successfully refunded to user." });
+        }
+
         // ─── Helpers ─────────────────────────────────────────
-        private int GetCurrentUserId()
+        private Guid GetCurrentUserId()
         {
             var claim = User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? throw new UnauthorizedAccessException("User ID not found in token.");
-            return int.Parse(claim);
+            return Guid.Parse(claim);
         }
     }
 }

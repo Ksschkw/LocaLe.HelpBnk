@@ -14,6 +14,7 @@ namespace LocaLe.EscrowApi.Data
         public DbSet<Escrow> Escrows => Set<Escrow>();
         public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
         public DbSet<Waitlist> Waitlists => Set<Waitlist>();
+        public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
         
         // Phase 2: Catalog & Community
         public DbSet<ServiceCategory> ServiceCategories => Set<ServiceCategory>();
@@ -22,6 +23,7 @@ namespace LocaLe.EscrowApi.Data
         public DbSet<Vouch> Vouches => Set<Vouch>();
         public DbSet<Message> Messages => Set<Message>();
         public DbSet<Dispute> Disputes => Set<Dispute>();
+        public DbSet<Notification> Notifications => Set<Notification>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -144,7 +146,26 @@ namespace LocaLe.EscrowApi.Data
                       .WithMany()
                       .HasForeignKey(m => m.JobId)
                       .OnDelete(DeleteBehavior.Cascade);
+
+                // Self-referencing FK for reply threading
+                entity.HasOne(m => m.ParentMessage)
+                      .WithMany()
+                      .HasForeignKey(m => m.ParentMessageId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasIndex(m => m.IsPinned);
+                entity.HasIndex(m => new { m.JobId, m.SentAt });
             });
+
+            modelBuilder.Entity<Notification>(entity =>
+            {
+                entity.HasOne(n => n.User)
+                      .WithMany()
+                      .HasForeignKey(n => n.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(n => new { n.UserId, n.IsRead });
+            });
+
 
             modelBuilder.Entity<Dispute>(entity =>
             {

@@ -19,25 +19,28 @@ namespace LocaLe.EscrowApi.Migrations
 
             modelBuilder.Entity("LocaLe.EscrowApi.Models.AuditLog", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Action")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("ActorId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Details")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("ReferenceId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid?>("JobId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ReferenceId")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ReferenceType")
                         .IsRequired()
@@ -56,18 +59,18 @@ namespace LocaLe.EscrowApi.Migrations
 
             modelBuilder.Entity("LocaLe.EscrowApi.Models.Booking", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("JobId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("JobId")
+                        .HasColumnType("TEXT");
 
-                    b.Property<int>("ProviderId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("ProviderId")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
@@ -83,9 +86,9 @@ namespace LocaLe.EscrowApi.Migrations
 
             modelBuilder.Entity("LocaLe.EscrowApi.Models.Dispute", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("AdminNotes")
                         .HasMaxLength(2000)
@@ -103,11 +106,11 @@ namespace LocaLe.EscrowApi.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("JobId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("JobId")
+                        .HasColumnType("TEXT");
 
-                    b.Property<int>("RaisedById")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("RaisedById")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Reason")
                         .IsRequired()
@@ -133,18 +136,18 @@ namespace LocaLe.EscrowApi.Migrations
 
             modelBuilder.Entity("LocaLe.EscrowApi.Models.Escrow", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("BookingId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("BookingId")
+                        .HasColumnType("TEXT");
 
-                    b.Property<int>("BuyerId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("BuyerId")
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
@@ -155,11 +158,14 @@ namespace LocaLe.EscrowApi.Migrations
                     b.Property<bool>("IsSecondPhaseFunded")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("ProviderId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("ProviderId")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("QrToken")
                         .HasMaxLength(8)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("QrTokenExpiry")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
@@ -174,14 +180,43 @@ namespace LocaLe.EscrowApi.Migrations
                     b.HasIndex("BookingId")
                         .IsUnique();
 
+                    b.HasIndex("BuyerId");
+
+                    b.HasIndex("ProviderId");
+
                     b.ToTable("Escrows");
+                });
+
+            modelBuilder.Entity("LocaLe.EscrowApi.Models.IdempotencyRecord", b =>
+                {
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RequestPath")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ResponseBody")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("StatusCode")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("IdempotencyKey");
+
+                    b.ToTable("IdempotencyRecords");
                 });
 
             modelBuilder.Entity("LocaLe.EscrowApi.Models.Job", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
@@ -189,16 +224,16 @@ namespace LocaLe.EscrowApi.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("CreatorId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("CreatorId")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("ServiceId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid?>("ServiceId")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
@@ -219,41 +254,110 @@ namespace LocaLe.EscrowApi.Migrations
 
             modelBuilder.Entity("LocaLe.EscrowApi.Models.Message", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasMaxLength(2000)
+                        .HasMaxLength(4000)
                         .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EditedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsEncrypted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsRead")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("JobId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("JobId")
+                        .HasColumnType("TEXT");
 
-                    b.Property<int>("SenderId")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("ParentContentPreview")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ParentMessageId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ParentSenderName")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SenderId")
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("SentAt")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("JobId");
+                    b.HasIndex("IsPinned");
+
+                    b.HasIndex("ParentMessageId");
 
                     b.HasIndex("SenderId");
+
+                    b.HasIndex("JobId", "SentAt");
 
                     b.ToTable("Messages");
                 });
 
+            modelBuilder.Entity("LocaLe.EscrowApi.Models.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("ReferenceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReferenceType")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "IsRead");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("LocaLe.EscrowApi.Models.Review", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(1000)
@@ -265,17 +369,17 @@ namespace LocaLe.EscrowApi.Migrations
                     b.Property<bool>("IsVisible")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("JobId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("JobId")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Rating")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("RevieweeId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("RevieweeId")
+                        .HasColumnType("TEXT");
 
-                    b.Property<int>("ReviewerId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("ReviewerId")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -290,9 +394,9 @@ namespace LocaLe.EscrowApi.Migrations
 
             modelBuilder.Entity("LocaLe.EscrowApi.Models.Service", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("AreaName")
                         .HasMaxLength(100)
@@ -301,8 +405,8 @@ namespace LocaLe.EscrowApi.Migrations
                     b.Property<decimal>("BasePrice")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
@@ -318,14 +422,17 @@ namespace LocaLe.EscrowApi.Migrations
                     b.Property<bool>("IsDiscoveryEnabled")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsRemote")
+                        .HasColumnType("INTEGER");
+
                     b.Property<decimal?>("Latitude")
                         .HasColumnType("decimal(18,6)");
 
                     b.Property<decimal?>("Longitude")
                         .HasColumnType("decimal(18,6)");
 
-                    b.Property<int>("ProviderId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("ProviderId")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("RequiredVouchPoints")
                         .HasColumnType("INTEGER");
@@ -361,9 +468,9 @@ namespace LocaLe.EscrowApi.Migrations
 
             modelBuilder.Entity("LocaLe.EscrowApi.Models.ServiceCategory", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
@@ -381,8 +488,8 @@ namespace LocaLe.EscrowApi.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("ParentId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -393,11 +500,19 @@ namespace LocaLe.EscrowApi.Migrations
 
             modelBuilder.Entity("LocaLe.EscrowApi.Models.User", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AreaName")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("AvatarUrl")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(1000)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
@@ -410,6 +525,15 @@ namespace LocaLe.EscrowApi.Migrations
 
                     b.Property<bool>("IsNinVerified")
                         .HasColumnType("INTEGER");
+
+                    b.Property<int>("JobsCompleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("Latitude")
+                        .HasColumnType("decimal(18,6)");
+
+                    b.Property<decimal?>("Longitude")
+                        .HasColumnType("decimal(18,6)");
 
                     b.Property<string>("NIN")
                         .HasColumnType("TEXT");
@@ -455,9 +579,9 @@ namespace LocaLe.EscrowApi.Migrations
 
             modelBuilder.Entity("LocaLe.EscrowApi.Models.Vouch", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(500)
@@ -475,11 +599,11 @@ namespace LocaLe.EscrowApi.Migrations
                     b.Property<int>("PointsGiven")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("ServiceId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("TEXT");
 
-                    b.Property<int>("VoucherId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("VoucherId")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -492,9 +616,9 @@ namespace LocaLe.EscrowApi.Migrations
 
             modelBuilder.Entity("LocaLe.EscrowApi.Models.Waitlist", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
@@ -502,14 +626,14 @@ namespace LocaLe.EscrowApi.Migrations
                     b.Property<string>("PrivateNotes")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("ServiceId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -522,15 +646,15 @@ namespace LocaLe.EscrowApi.Migrations
 
             modelBuilder.Entity("LocaLe.EscrowApi.Models.Wallet", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal>("Balance")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("Version")
                         .IsConcurrencyToken()
@@ -590,7 +714,23 @@ namespace LocaLe.EscrowApi.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("LocaLe.EscrowApi.Models.User", "Buyer")
+                        .WithMany()
+                        .HasForeignKey("BuyerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LocaLe.EscrowApi.Models.User", "Provider")
+                        .WithMany()
+                        .HasForeignKey("ProviderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Booking");
+
+                    b.Navigation("Buyer");
+
+                    b.Navigation("Provider");
                 });
 
             modelBuilder.Entity("LocaLe.EscrowApi.Models.Job", b =>
@@ -619,6 +759,11 @@ namespace LocaLe.EscrowApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("LocaLe.EscrowApi.Models.Message", "ParentMessage")
+                        .WithMany()
+                        .HasForeignKey("ParentMessageId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("LocaLe.EscrowApi.Models.User", "Sender")
                         .WithMany()
                         .HasForeignKey("SenderId")
@@ -627,7 +772,20 @@ namespace LocaLe.EscrowApi.Migrations
 
                     b.Navigation("Job");
 
+                    b.Navigation("ParentMessage");
+
                     b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("LocaLe.EscrowApi.Models.Notification", b =>
+                {
+                    b.HasOne("LocaLe.EscrowApi.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("LocaLe.EscrowApi.Models.Review", b =>

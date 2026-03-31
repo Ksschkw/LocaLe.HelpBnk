@@ -11,19 +11,19 @@ namespace LocaLe.EscrowApi.Repositories
         {
         }
 
-        public async Task<int> GetTotalPointsForServiceAsync(int serviceId)
+        public async Task<int> GetTotalPointsForServiceAsync(Guid serviceId)
         {
             return await _dbSet
                 .Where(v => v.ServiceId == serviceId && !v.IsRetracted)
                 .SumAsync(v => v.PointsGiven);
         }
 
-        public async Task<bool> HasUserVouchedForServiceAsync(int userId, int serviceId)
+        public async Task<bool> HasUserVouchedForServiceAsync(Guid userId, Guid serviceId)
         {
             return await _dbSet.AnyAsync(v => v.VoucherId == userId && v.ServiceId == serviceId && !v.IsRetracted);
         }
 
-        public async Task<IEnumerable<Vouch>> GetVouchesForServiceWithUserAsync(int serviceId)
+        public async Task<IEnumerable<Vouch>> GetVouchesForServiceAsync(Guid serviceId)
         {
             return await _dbSet
                 .Include(v => v.Voucher)

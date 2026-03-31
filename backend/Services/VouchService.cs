@@ -28,7 +28,7 @@ namespace LocaLe.EscrowApi.Services
             _auditRepo = auditRepo;
         }
 
-        public async Task VouchAsync(int serviceId, int voucherId, string? comment)
+        public async Task VouchAsync(Guid serviceId, Guid voucherId, string? comment)
         {
             var service = await _serviceRepo.GetByIdAsync(serviceId)
                 ?? throw new KeyNotFoundException("Service not found.");
@@ -43,12 +43,6 @@ namespace LocaLe.EscrowApi.Services
             if (alreadyVouched)
                 throw new InvalidOperationException("You have already vouched for this service.");
 
-            // Weight logic: Platform users give more weight
-            // Ideally, we'd check if they are logged in (which they are if they have a voucherId)
-            // The user requested: "actual people vouch for you and based on wheter the person that vouches for that your service is logged in to the platform or not the amount of point attached varies"
-            // Since this API requires Auth, any call here is from a platform user.
-            // If we had a guest vouching endpoint, we'd check if actorId is 0 or something.
-            
             int points = 10; // Platform user weight
             
             var vouch = new Vouch
@@ -100,7 +94,7 @@ namespace LocaLe.EscrowApi.Services
             await _auditRepo.SaveChangesAsync();
         }
 
-        public async Task<int> GetServicePointsAsync(int serviceId)
+        public async Task<int> GetServicePointsAsync(Guid serviceId)
         {
             return await _vouchRepo.GetTotalPointsForServiceAsync(serviceId);
         }

@@ -16,11 +16,11 @@ namespace LocaLe.EscrowApi.Repositories
             return await _dbSet.FirstOrDefaultAsync(u => u.Email == email);
         }
 
-        public async Task<User?> GetUserWithWalletAsync(int userId)
+        public async Task<User?> GetByIdWithDetailsAsync(Guid id)
         {
             return await _dbSet
                 .Include(u => u.Wallet)
-                .FirstOrDefaultAsync(u => u.Id == userId);
+                .FirstOrDefaultAsync(u => u.Id == id);
         }
 
         public async Task<bool> ExistsByEmailAsync(string email)

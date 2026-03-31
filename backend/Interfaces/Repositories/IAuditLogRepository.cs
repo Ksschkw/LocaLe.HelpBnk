@@ -5,5 +5,6 @@ namespace LocaLe.EscrowApi.Interfaces.Repositories
     public interface IAuditLogRepository : IRepository<AuditLog>
     {
         Task<IEnumerable<AuditLog>> GetRecentLogsAsync(int count = 50);
+        Task<List<AuditLog>> GetForUserAsync(Guid userId);
     }
 }

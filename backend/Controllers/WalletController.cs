@@ -52,11 +52,49 @@ namespace LocaLe.EscrowApi.Controllers
             }
         }
 
-        private int GetCurrentUserId()
+        /// <summary>
+        /// Returns a full transaction ledger for the current user:
+        /// top-ups, escrow locks, and incoming payouts.
+        /// </summary>
+        [HttpGet("transactions")]
+        [ProducesResponseType(typeof(List<AuditLogResponse>), 200)]
+        public async Task<IActionResult> GetTransactions()
+        {
+            var userId = GetCurrentUserId();
+            var ledger = await _walletService.GetTransactionsAsync(userId);
+            return Ok(ledger);
+        }
+
+        /// <summary>
+        /// Withdraw funds from wallet to your connected bank account.
+        /// Requires a positive amount and sufficient balance.
+        /// </summary>
+        [HttpPost("withdraw")]
+        [ProducesResponseType(typeof(WalletResponse), 200)]
+        [ProducesResponseType(400)]
+        public async Task<IActionResult> Withdraw([FromBody] TopUpRequest request)
+        {
+            var userId = GetCurrentUserId();
+            try
+            {
+                var wallet = await _walletService.WithdrawAsync(userId, request.Amount);
+                return Ok(wallet);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
+
+        private Guid GetCurrentUserId()
         {
             var claim = User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? throw new UnauthorizedAccessException("User ID not found in token.");
-            return int.Parse(claim);
+            return Guid.Parse(claim);
         }
     }
 }

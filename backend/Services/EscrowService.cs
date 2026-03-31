@@ -24,7 +24,7 @@ namespace LocaLe.EscrowApi.Services
             _auditRepo = auditRepo;
         }
 
-        public async Task<EscrowResponse> SecureFundsAsync(int bookingId, int buyerId, decimal initialDepositPercent = 1.0m)
+        public async Task<EscrowResponse> SecureFundsAsync(Guid bookingId, Guid buyerId, decimal initialDepositPercent = 1.0m)
         {
             using var transaction = await _escrowRepo.BeginTransactionAsync();
 
@@ -39,7 +39,7 @@ namespace LocaLe.EscrowApi.Services
                 if (booking.Job.CreatorId != buyerId)
                     throw new UnauthorizedAccessException("Only the job poster can secure funds.");
 
-                var existingEscrow = await _escrowRepo.GetEscrowByBookingIdAsync(bookingId);
+                var existingEscrow = await _escrowRepo.GetByBookingIdAsync(bookingId);
                 if (existingEscrow != null)
                     throw new InvalidOperationException("Escrow already exists for this booking.");
 
@@ -64,7 +64,8 @@ namespace LocaLe.EscrowApi.Services
                     Amount = booking.Job.Amount,
                     InitialDepositPercentage = initialDepositPercent,
                     Status = EscrowStatus.Secured,
-                    QrToken = qrToken
+                    QrToken = qrToken,
+                    QrTokenExpiry = DateTime.UtcNow.AddMinutes(15)
                 };
 
                 await _escrowRepo.AddAsync(escrow);
@@ -73,11 +74,12 @@ namespace LocaLe.EscrowApi.Services
 
                 await _auditRepo.AddAsync(new AuditLog
                 {
+                    JobId = booking.JobId,
                     ReferenceType = "Escrow",
                     ReferenceId = escrow.Id,
                     Action = "SECURED",
                     ActorId = buyerId,
-                    Details = $"₦{initialAmount:N2} ({initialDepositPercent:P0}) locked from buyer #{buyerId}. Booking #{bookingId}."
+                    Details = $"₦{initialAmount:N2} ({initialDepositPercent:P0}) locked from buyer {buyerId}. Booking {bookingId}."
                 });
 
                 await _auditRepo.SaveChangesAsync();
@@ -92,13 +94,13 @@ namespace LocaLe.EscrowApi.Services
             }
         }
 
-        public async Task<EscrowResponse> CompleteAndReleaseAsync(int escrowId, string qrToken, int providerId)
+        public async Task<EscrowResponse> CompleteAndReleaseAsync(Guid escrowId, string qrToken, Guid providerId)
         {
             using var transaction = await _escrowRepo.BeginTransactionAsync();
 
             try
             {
-                var escrow = await _escrowRepo.GetByIdAsync(escrowId)
+                var escrow = await _escrowRepo.GetEscrowDetailedAsync(escrowId)
                     ?? throw new InvalidOperationException("Escrow not found.");
 
                 if (escrow.Status != EscrowStatus.Secured)
@@ -106,6 +108,9 @@ namespace LocaLe.EscrowApi.Services
 
                 if (!string.Equals(escrow.QrToken, qrToken, StringComparison.OrdinalIgnoreCase))
                     throw new InvalidOperationException("Invalid QR token.");
+
+                if (!escrow.QrTokenExpiry.HasValue || DateTime.UtcNow > escrow.QrTokenExpiry.Value)
+                    throw new InvalidOperationException("QR code has expired. Please ask the buyer to refresh it.");
 
                 if (escrow.ProviderId != providerId)
                     throw new UnauthorizedAccessException("Permission denied.");
@@ -126,6 +131,7 @@ namespace LocaLe.EscrowApi.Services
 
                     await _auditRepo.AddAsync(new AuditLog
                     {
+                        JobId = escrow.Booking?.JobId,
                         ReferenceType = "Escrow",
                         ReferenceId = escrow.Id,
                         Action = "REMAINING_FUNDS_SECURED",
@@ -143,15 +149,17 @@ namespace LocaLe.EscrowApi.Services
 
                 escrow.Status = EscrowStatus.Released;
                 escrow.QrToken = null;
+                escrow.QrTokenExpiry = null;
                 _escrowRepo.Update(escrow);
 
                 await _auditRepo.AddAsync(new AuditLog
                 {
+                    JobId = escrow.Booking?.JobId,
                     ReferenceType = "Escrow",
                     ReferenceId = escrow.Id,
                     Action = "FULL_RELEASE",
                     ActorId = providerId,
-                    Details = $"Full payout of ₦{escrow.Amount:N2} completed to provider #{providerId}."
+                    Details = $"Full payout of ₦{escrow.Amount:N2} completed to provider {providerId}."
                 });
 
                 await _escrowRepo.SaveChangesAsync();
@@ -167,15 +175,15 @@ namespace LocaLe.EscrowApi.Services
             }
         }
 
-        public async Task<EscrowResponse> ReleaseFundsAsync(int escrowId, string qrToken, int providerId)
+        public async Task<EscrowResponse> ReleaseFundsAsync(Guid escrowId, string qrToken, Guid providerId)
         {
             // Simple bridge to the new logic if it's 100% or just handle as 100%
             return await CompleteAndReleaseAsync(escrowId, qrToken, providerId);
         }
 
-        public async Task<EscrowResponse> DisputeAsync(int escrowId, int actorId)
+        public async Task<EscrowResponse> DisputeAsync(Guid escrowId, Guid actorId)
         {
-            var escrow = await _escrowRepo.GetByIdAsync(escrowId)
+            var escrow = await _escrowRepo.GetEscrowDetailedAsync(escrowId)
                 ?? throw new InvalidOperationException("Escrow not found.");
 
             if (escrow.Status != EscrowStatus.Secured)
@@ -190,11 +198,12 @@ namespace LocaLe.EscrowApi.Services
 
             await _auditRepo.AddAsync(new AuditLog
             {
+                JobId = escrow.Booking?.JobId,
                 ReferenceType = "Escrow",
                 ReferenceId = escrow.Id,
                 Action = "DISPUTED",
                 ActorId = actorId,
-                Details = $"Dispute raised by user #{actorId}. ₦{escrow.Amount:N2} frozen pending resolution."
+                Details = $"Dispute raised by user {actorId}. ₦{escrow.Amount:N2} frozen pending resolution."
             });
 
             await _escrowRepo.SaveChangesAsync();
@@ -202,13 +211,13 @@ namespace LocaLe.EscrowApi.Services
             return ToResponse(escrow);
         }
 
-        public async Task<EscrowResponse> CancelAsync(int escrowId, int actorId)
+        public async Task<EscrowResponse> CancelAsync(Guid escrowId, Guid actorId)
         {
             using var transaction = await _escrowRepo.BeginTransactionAsync();
 
             try
             {
-                var escrow = await _escrowRepo.GetByIdAsync(escrowId)
+                var escrow = await _escrowRepo.GetEscrowDetailedAsync(escrowId)
                     ?? throw new InvalidOperationException("Escrow not found.");
 
                 if (escrow.Status != EscrowStatus.Secured)
@@ -230,11 +239,12 @@ namespace LocaLe.EscrowApi.Services
 
                 await _auditRepo.AddAsync(new AuditLog
                 {
+                    JobId = escrow.Booking?.JobId,
                     ReferenceType = "Escrow",
                     ReferenceId = escrow.Id,
                     Action = "CANCELLED",
                     ActorId = actorId,
-                    Details = $"Escrow cancelled. ₦{escrow.Amount:N2} refunded to buyer #{escrow.BuyerId}."
+                    Details = $"Escrow cancelled. ₦{escrow.Amount:N2} refunded to buyer {escrow.BuyerId}."
                 });
 
                 await _escrowRepo.SaveChangesAsync();
@@ -251,13 +261,43 @@ namespace LocaLe.EscrowApi.Services
             }
         }
 
-        public async Task<EscrowResponse?> GetEscrowByBookingIdAsync(int bookingId)
+        public async Task<EscrowResponse> RefreshQrAsync(Guid escrowId, Guid buyerId)
         {
-            var escrow = await _escrowRepo.GetEscrowByBookingIdAsync(bookingId);
+            var escrow = await _escrowRepo.GetEscrowDetailedAsync(escrowId)
+                ?? throw new InvalidOperationException("Escrow not found.");
+
+            if (escrow.Status != EscrowStatus.Secured)
+                throw new InvalidOperationException("Only Secured escrows can have their QR tokens refreshed.");
+
+            if (escrow.BuyerId != buyerId)
+                throw new UnauthorizedAccessException("Only the buyer can refresh the QR token.");
+
+            escrow.QrToken = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+            escrow.QrTokenExpiry = DateTime.UtcNow.AddMinutes(15);
+            _escrowRepo.Update(escrow);
+
+            await _auditRepo.AddAsync(new AuditLog
+            {
+                JobId = escrow.Booking?.JobId,
+                ReferenceType = "Escrow",
+                ReferenceId = escrow.Id,
+                Action = "QR_REFRESHED",
+                ActorId = buyerId,
+                Details = "Buyer generated a new QR token."
+            });
+
+            await _escrowRepo.SaveChangesAsync();
+            await _auditRepo.SaveChangesAsync();
+            return ToResponse(escrow);
+        }
+
+        public async Task<EscrowResponse?> GetEscrowByBookingIdAsync(Guid bookingId)
+        {
+            var escrow = await _escrowRepo.GetByBookingIdAsync(bookingId);
             return escrow == null ? null : ToResponse(escrow);
         }
 
-        public async Task<List<AuditLogResponse>> GetAuditLogsAsync(int escrowId)
+        public async Task<List<AuditLogResponse>> GetAuditLogsAsync(Guid escrowId)
         {
             // Simple query via generic find if not specialized
             var logs = await _auditRepo.FindAsync(a => a.ReferenceType == "Escrow" && a.ReferenceId == escrowId);
@@ -278,6 +318,12 @@ namespace LocaLe.EscrowApi.Services
         {
             Id = escrow.Id,
             BookingId = escrow.BookingId,
+            JobId = escrow.Booking?.JobId ?? Guid.Empty,
+            JobTitle = escrow.Booking?.Job?.Title ?? "N/A",
+            BuyerId = escrow.BuyerId,
+            BuyerName = escrow.Buyer?.Name ?? "Unknown Buyer",
+            ProviderId = escrow.ProviderId,
+            ProviderName = escrow.Provider?.Name ?? "Unknown Provider",
             Amount = escrow.Amount,
             Status = escrow.Status.ToString(),
             QrToken = escrow.QrToken,

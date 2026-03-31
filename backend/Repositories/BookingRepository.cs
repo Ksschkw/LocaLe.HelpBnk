@@ -11,7 +11,7 @@ namespace LocaLe.EscrowApi.Repositories
         {
         }
 
-        public async Task<Booking?> GetWithDetailsAsync(Guid id)
+        public async Task<Booking?> GetBookingDetailedAsync(Guid id)
         {
             return await _dbSet
                 .Include(b => b.Job)
@@ -49,7 +49,7 @@ namespace LocaLe.EscrowApi.Repositories
             return await _dbSet.AnyAsync(b => b.JobId == jobId && b.ProviderId == providerId);
         }
 
-        public async Task<IEnumerable<Booking>> GetPendingApplicationsForJobAsync(int jobId)
+        public async Task<IEnumerable<Booking>> GetPendingApplicationsForJobAsync(Guid jobId)
         {
             return await _dbSet
                 .Include(b => b.Provider)

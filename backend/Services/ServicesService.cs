@@ -2,18 +2,21 @@ using LocaLe.EscrowApi.DTOs;
 using LocaLe.EscrowApi.Interfaces;
 using LocaLe.EscrowApi.Interfaces.Repositories;
 using LocaLe.EscrowApi.Models;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace LocaLe.EscrowApi.Services
 {
-    public class CatalogService : ICatalogService
+    public class ServicesService : IServicesService
     {
         private readonly ICategoryRepository _categoryRepo;
         private readonly IServiceRepository _serviceRepo;
+        private readonly IMemoryCache _cache;
 
-        public CatalogService(ICategoryRepository categoryRepo, IServiceRepository serviceRepo)
+        public ServicesService(ICategoryRepository categoryRepo, IServiceRepository serviceRepo, IMemoryCache cache)
         {
             _categoryRepo = categoryRepo;
             _serviceRepo = serviceRepo;
+            _cache = cache;
         }
 
         public async Task<List<CategoryResponse>> GetCategoriesTreeAsync()
@@ -27,18 +30,22 @@ namespace LocaLe.EscrowApi.Services
                 Description = c.Description,
                 IconUrl = c.IconUrl,
                 ParentId = c.ParentId,
+                ServiceCount = c.Services.Select(s => s.ProviderId)
+                                .Concat(c.SubCategories.SelectMany(sc => sc.Services.Select(s => s.ProviderId)))
+                                .Distinct().Count(),
                 SubCategories = c.SubCategories.Select(s => new CategoryResponse
                 {
                     Id = s.Id,
                     Name = s.Name,
                     Description = s.Description,
                     IconUrl = s.IconUrl,
-                    ParentId = s.ParentId
+                    ParentId = s.ParentId,
+                    ServiceCount = s.Services.Select(sx => sx.ProviderId).Distinct().Count()
                 }).ToList()
             }).ToList();
         }
 
-        public async Task<CategoryResponse?> GetCategoryByIdAsync(int id)
+        public async Task<CategoryResponse?> GetCategoryByIdAsync(Guid id)
         {
             var c = await _categoryRepo.GetCategoryWithSubsByIdAsync(id);
             if (c == null) return null;
@@ -50,24 +57,60 @@ namespace LocaLe.EscrowApi.Services
                 Description = c.Description,
                 IconUrl = c.IconUrl,
                 ParentId = c.ParentId,
+                ServiceCount = c.Services.Select(s => s.ProviderId)
+                                .Concat(c.SubCategories.SelectMany(sc => sc.Services.Select(s => s.ProviderId)))
+                                .Distinct().Count(),
                 SubCategories = c.SubCategories.Select(s => new CategoryResponse
                 {
                     Id = s.Id,
                     Name = s.Name,
                     Description = s.Description,
                     IconUrl = s.IconUrl,
-                    ParentId = s.ParentId
+                    ParentId = s.ParentId,
+                    ServiceCount = s.Services.Select(sx => sx.ProviderId).Distinct().Count()
                 }).ToList()
             };
         }
 
-        public async Task<List<ServiceResponse>> GetServicesByCategoryAsync(int categoryId)
+        public async Task<CategoryResponse> CreateCategoryAsync(CreateCategoryRequest request)
+        {
+            var category = new ServiceCategory
+            {
+                Name = request.Name,
+                Description = request.Description,
+                IconUrl = request.IconUrl,
+                ParentId = request.ParentId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _categoryRepo.AddAsync(category);
+            await _categoryRepo.SaveChangesAsync();
+
+            _cache.Remove("AllCategories");
+
+            return new CategoryResponse
+            {
+                Id = category.Id,
+                Name = category.Name,
+                Description = category.Description,
+                IconUrl = category.IconUrl,
+                ParentId = category.ParentId
+            };
+        }
+
+        public async Task<List<ServiceResponse>> GetAllActiveServicesAsync()
+        {
+            var services = await _serviceRepo.GetAllActiveServicesDetailedAsync();
+            return MapServices(services);
+        }
+
+        public async Task<List<ServiceResponse>> GetServicesByCategoryAsync(Guid categoryId)
         {
             var services = await _serviceRepo.GetServicesByCategoryIdAsync(categoryId);
             return MapServices(services);
         }
 
-        public async Task<ServiceResponse?> GetServiceByIdAsync(int id)
+        public async Task<ServiceResponse?> GetServiceByIdAsync(Guid id)
         {
             var s = await _serviceRepo.GetServiceDetailedAsync(id);
             if (s == null) return null;
@@ -76,9 +119,9 @@ namespace LocaLe.EscrowApi.Services
             {
                 Id = s.Id,
                 ProviderId = s.ProviderId,
-                ProviderName = s.Provider != null ? s.Provider.Name : "Unknown",
+                ProviderName = s.Provider?.Name ?? "Unknown",
                 CategoryId = s.CategoryId,
-                CategoryName = s.Category != null ? s.Category.Name : "Unknown",
+                CategoryName = s.Category?.Name ?? "Unknown",
                 Title = s.Title,
                 Description = s.Description,
                 BasePrice = s.BasePrice,
@@ -88,17 +131,12 @@ namespace LocaLe.EscrowApi.Services
                 IsDiscoveryEnabled = s.IsDiscoveryEnabled,
                 Latitude = s.Latitude,
                 Longitude = s.Longitude,
-                AreaName = s.AreaName
+                AreaName = s.AreaName,
+                IsRemote = s.IsRemote
             };
         }
 
-        public async Task<List<ServiceResponse>> GetAllServicesAsync(string? search = null, string? categoryName = null, decimal? lat = null, decimal? lng = null, decimal? radiusKm = null)
-        {
-            var services = await _serviceRepo.SearchServicesAsync(search, categoryName, lat, lng, radiusKm);
-            return MapServices(services);
-        }
-
-        public async Task<ServiceResponse> CreateServiceAsync(int providerId, CreateServiceRequest request)
+        public async Task<ServiceResponse> CreateServiceAsync(Guid providerId, CreateServiceRequest request)
         {
             var categoryExists = await _categoryRepo.GetByIdAsync(request.CategoryId) != null;
             if (!categoryExists)
@@ -116,8 +154,9 @@ namespace LocaLe.EscrowApi.Services
                 Latitude = request.Latitude,
                 Longitude = request.Longitude,
                 AreaName = request.AreaName,
-                RequiredVouchPoints = 50, // Default threshold
-                IsDiscoveryEnabled = false, // Start hidden until vouched
+                IsRemote = request.IsRemote,
+                RequiredVouchPoints = 50,
+                IsDiscoveryEnabled = false,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -125,10 +164,12 @@ namespace LocaLe.EscrowApi.Services
             await _serviceRepo.AddAsync(service);
             await _serviceRepo.SaveChangesAsync();
 
+            _cache.Remove("AllActiveServices");
+
             return await GetServiceByIdAsync(service.Id) ?? throw new InvalidOperationException("Failed to load created service.");
         }
 
-        public async Task<ServiceResponse> UpdateServiceAsync(int providerId, int serviceId, UpdateServiceRequest request)
+        public async Task<ServiceResponse> UpdateServiceAsync(Guid providerId, Guid serviceId, UpdateServiceRequest request)
         {
             var service = await _serviceRepo.GetByIdAsync(serviceId) ?? throw new KeyNotFoundException("Service not found.");
             
@@ -143,26 +184,54 @@ namespace LocaLe.EscrowApi.Services
             if (request.Latitude.HasValue) service.Latitude = request.Latitude;
             if (request.Longitude.HasValue) service.Longitude = request.Longitude;
             if (request.AreaName != null) service.AreaName = request.AreaName;
+            if (request.IsRemote.HasValue) service.IsRemote = request.IsRemote.Value;
             
             service.UpdatedAt = DateTime.UtcNow;
 
             _serviceRepo.Update(service);
             await _serviceRepo.SaveChangesAsync();
 
+            _cache.Remove("AllActiveServices");
+
             return await GetServiceByIdAsync(service.Id) ?? throw new InvalidOperationException("Failed to load updated service.");
         }
 
-        public async Task DeleteServiceAsync(int providerId, int serviceId)
+        public async Task DeleteServiceAsync(Guid providerId, Guid serviceId)
         {
             var service = await _serviceRepo.GetByIdAsync(serviceId) ?? throw new KeyNotFoundException("Service not found.");
             
             if (service.ProviderId != providerId)
                 throw new UnauthorizedAccessException("You can only delete your own services.");
 
-            // Instead of hard delete, we could mark as Archived, but user requested full CRUD.
-            // Let's physically remove it:
             _serviceRepo.Remove(service);
             await _serviceRepo.SaveChangesAsync();
+
+            _cache.Remove("AllActiveServices");
+        }
+
+        public async Task<List<ServiceResponse>> GetServicesByProviderAsync(Guid providerId)
+        {
+            var services = await _serviceRepo.GetServicesByProviderIdAsync(providerId);
+            return MapServices(services);
+        }
+
+        public async Task<ServiceResponse> ActivateServiceAsync(Guid providerId, Guid serviceId)
+        {
+            var service = await _serviceRepo.GetByIdAsync(serviceId) ?? throw new KeyNotFoundException("Service not found.");
+            
+            if (service.ProviderId != providerId)
+                throw new UnauthorizedAccessException("You can only activate your own services.");
+
+            service.Status = "Active";
+            service.IsDiscoveryEnabled = true;
+            service.UpdatedAt = DateTime.UtcNow;
+
+            _serviceRepo.Update(service);
+            await _serviceRepo.SaveChangesAsync();
+
+            _cache.Remove("AllActiveServices");
+
+            return await GetServiceByIdAsync(service.Id) ?? throw new InvalidOperationException("Failed to load updated service.");
         }
 
         private List<ServiceResponse> MapServices(IEnumerable<Service> services)
@@ -171,9 +240,9 @@ namespace LocaLe.EscrowApi.Services
             {
                 Id = s.Id,
                 ProviderId = s.ProviderId,
-                ProviderName = s.Provider != null ? s.Provider.Name : "Unknown",
+                ProviderName = s.Provider?.Name ?? "Unknown",
                 CategoryId = s.CategoryId,
-                CategoryName = s.Category != null ? s.Category.Name : "Unknown",
+                CategoryName = s.Category?.Name ?? "Unknown",
                 Title = s.Title,
                 Description = s.Description,
                 BasePrice = s.BasePrice,
@@ -183,7 +252,8 @@ namespace LocaLe.EscrowApi.Services
                 IsDiscoveryEnabled = s.IsDiscoveryEnabled,
                 Latitude = s.Latitude,
                 Longitude = s.Longitude,
-                AreaName = s.AreaName
+                AreaName = s.AreaName,
+                IsRemote = s.IsRemote
             }).ToList();
         }
     }

@@ -21,7 +21,7 @@ namespace LocaLe.EscrowApi.Controllers
 
         [Authorize]
         [HttpPost("{serviceId}")]
-        public async Task<IActionResult> Vouch(int serviceId, [FromBody] string? comment)
+        public async Task<IActionResult> Vouch(Guid serviceId, [FromBody] string? comment)
         {
             var voucherId = GetCurrentUserId();
             try
@@ -34,17 +34,17 @@ namespace LocaLe.EscrowApi.Controllers
         }
 
         [HttpGet("{serviceId}/points")]
-        public async Task<IActionResult> GetPoints(int serviceId)
+        public async Task<IActionResult> GetPoints(Guid serviceId)
         {
             var points = await _vouchService.GetServicePointsAsync(serviceId);
             return Ok(new { ServiceId = serviceId, TotalPoints = points });
         }
 
-        private int GetCurrentUserId()
+        private Guid GetCurrentUserId()
         {
             var claim = User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? throw new UnauthorizedAccessException("User ID not found in token.");
-            return int.Parse(claim);
+            return Guid.Parse(claim);
         }
     }
 }

@@ -28,7 +28,7 @@ namespace LocaLe.EscrowApi.Services
 
         private readonly IWalletRepository _walletRepo;
 
-        public async Task<PagedResult<AdminUserResponse>> GetAllUsersAsync(int page, int pageSize)
+        public async Task<PagedResult<AdminUserResponse>> GetUsersAsync(int page, int pageSize)
         {
             page = Math.Max(1, page);
             pageSize = Math.Clamp(pageSize, 1, 100);
@@ -61,7 +61,12 @@ namespace LocaLe.EscrowApi.Services
             };
         }
 
-        public async Task<AdminUserResponse?> GetUserByIdAsync(int id)
+        public async Task PromoteToAdminAsync(Guid superAdminId, Guid targetUserId)
+        {
+            await SetUserRoleAsync(targetUserId, "Admin", superAdminId);
+        }
+
+        public async Task<AdminUserResponse?> GetUserByIdAsync(Guid id)
         {
             var u = await _userRepo.GetByIdAsync(id);
             if (u == null) return null;
@@ -83,7 +88,7 @@ namespace LocaLe.EscrowApi.Services
             };
         }
 
-        public async Task SetUserRoleAsync(int targetUserId, string newRole, int actorId)
+        public async Task SetUserRoleAsync(Guid targetUserId, string newRole, Guid actorId)
         {
             var actor = await _userRepo.GetByIdAsync(actorId)
                 ?? throw new KeyNotFoundException("Actor not found.");
@@ -151,7 +156,7 @@ namespace LocaLe.EscrowApi.Services
             }).ToList();
         }
 
-        public async Task ResolveDisputeAsync(int disputeId, string resolution, int actorId)
+        public async Task ResolveDisputeAsync(Guid disputeId, string resolution, Guid actorId)
         {
             var dispute = await _disputeRepo.GetDisputeDetailedAsync(disputeId)
                 ?? throw new KeyNotFoundException($"Dispute {disputeId} not found.");
@@ -172,14 +177,14 @@ namespace LocaLe.EscrowApi.Services
                 ReferenceId = disputeId,
                 Action = "DisputeResolved",
                 ActorId = actorId,
-                Details = $"Admin resolved dispute #{disputeId}: {resolution}"
+                Details = $"Admin resolved dispute {disputeId}: {resolution}"
             });
 
             await _disputeRepo.SaveChangesAsync();
             await _auditRepo.SaveChangesAsync();
         }
 
-        public async Task<AdminUserResponse> CreateAdminAsync(CreateAdminRequest request, int actorId)
+        public async Task<AdminUserResponse> CreateAdminAsync(CreateAdminRequest request, Guid actorId)
         {
             var actor = await _userRepo.GetByIdAsync(actorId)
                 ?? throw new KeyNotFoundException("Actor not found.");
@@ -218,7 +223,7 @@ namespace LocaLe.EscrowApi.Services
                 ReferenceId = user.Id,
                 Action = "AdminCreated",
                 ActorId = actorId,
-                Details = $"New {parsedRole} account created for {user.Email} by SuperAdmin #{actorId}."
+                Details = $"New {parsedRole} account created for {user.Email} by SuperAdmin {actorId}."
             });
             await _auditRepo.SaveChangesAsync();
 

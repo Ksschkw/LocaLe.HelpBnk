@@ -7,6 +7,7 @@ namespace LocaLe.EscrowApi.Interfaces.Repositories
         Task<IEnumerable<Job>> GetAllOpenJobsAsync();
         Task<Job?> GetJobWithCreatorAsync(Guid id);
         Task<IEnumerable<Job>> GetJobsByCreatorAsync(Guid creatorId);
+        Task<IEnumerable<Job>> GetJobsByServiceProviderAsync(Guid providerId);
         Task<IEnumerable<Job>> GetAllJobsDetailedAsync();
     }
 }

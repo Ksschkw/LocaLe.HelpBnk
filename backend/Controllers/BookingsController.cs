@@ -25,7 +25,7 @@ namespace LocaLe.EscrowApi.Controllers
         [HttpPost("apply/{jobId}")]
         [ProducesResponseType(typeof(BookingResponse), 201)]
         [ProducesResponseType(400)]
-        public async Task<IActionResult> ApplyToJob(int jobId)
+        public async Task<IActionResult> ApplyToJob(Guid jobId)
         {
             var providerId = GetCurrentUserId();
             try
@@ -46,7 +46,7 @@ namespace LocaLe.EscrowApi.Controllers
         [ProducesResponseType(typeof(BookingResponse), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(403)]
-        public async Task<IActionResult> ConfirmBooking(int bookingId)
+        public async Task<IActionResult> ConfirmBooking(Guid bookingId)
         {
             var buyerId = GetCurrentUserId();
             try
@@ -81,7 +81,7 @@ namespace LocaLe.EscrowApi.Controllers
         /// </summary>
         [HttpPut("{id}/status")]
         [ProducesResponseType(typeof(BookingResponse), 200)]
-        public async Task<IActionResult> UpdateBookingStatus(int id, [FromBody] string newStatus)
+        public async Task<IActionResult> UpdateBookingStatus(Guid id, [FromBody] string newStatus)
         {
             var userId = GetCurrentUserId();
             try
@@ -89,8 +89,8 @@ namespace LocaLe.EscrowApi.Controllers
                 var booking = await _bookingService.UpdateBookingStatusAsync(id, userId, newStatus);
                 return Ok(booking);
             }
-            catch (KeyNotFoundException ex) { return NotFound(new { Error = ex.Message }); }
-            catch (UnauthorizedAccessException ex) { return Forbid(); }
+            catch (KeyNotFoundException) { return NotFound(new { Error = "Booking not found." }); }
+            catch (UnauthorizedAccessException) { return Forbid(); }
             catch (InvalidOperationException ex) { return BadRequest(new { Error = ex.Message }); }
         }
 
@@ -99,7 +99,7 @@ namespace LocaLe.EscrowApi.Controllers
         /// </summary>
         [HttpDelete("{id}")]
         [ProducesResponseType(204)]
-        public async Task<IActionResult> DeleteBooking(int id)
+        public async Task<IActionResult> DeleteBooking(Guid id)
         {
             var userId = GetCurrentUserId();
             try
@@ -107,16 +107,16 @@ namespace LocaLe.EscrowApi.Controllers
                 await _bookingService.DeleteBookingAsync(id, userId);
                 return NoContent();
             }
-            catch (KeyNotFoundException ex) { return NotFound(new { Error = ex.Message }); }
-            catch (UnauthorizedAccessException ex) { return Forbid(); }
+            catch (KeyNotFoundException) { return NotFound(new { Error = "Booking not found." }); }
+            catch (UnauthorizedAccessException) { return Forbid(); }
             catch (InvalidOperationException ex) { return BadRequest(new { Error = ex.Message }); }
         }
 
-        private int GetCurrentUserId()
+        private Guid GetCurrentUserId()
         {
             var claim = User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? throw new UnauthorizedAccessException("User ID not found in token.");
-            return int.Parse(claim);
+            return Guid.Parse(claim);
         }
     }
 }

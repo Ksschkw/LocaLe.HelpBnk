@@ -50,6 +50,9 @@ namespace LocaLe.EscrowApi.Models
         [MaxLength(100)]
         public string? AreaName { get; set; }
 
+        public bool IsRemote { get; set; } = false;
+
+
         public int RequiredVouchPoints { get; set; } = 50; // Threshold to enable
         public bool IsDiscoveryEnabled { get; set; } = false;
 

@@ -25,7 +25,7 @@ namespace LocaLe.EscrowApi.Controllers
         [HttpGet("booking/{bookingId}")]
         [ProducesResponseType(typeof(EscrowResponse), 200)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> GetByBooking(int bookingId)
+        public async Task<IActionResult> GetByBooking(Guid bookingId)
         {
             var escrow = await _escrowService.GetEscrowByBookingIdAsync(bookingId);
             if (escrow == null) return NotFound(new { Error = "No escrow found for this booking." });
@@ -40,7 +40,7 @@ namespace LocaLe.EscrowApi.Controllers
         [ProducesResponseType(typeof(EscrowResponse), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(403)]
-        public async Task<IActionResult> Release(int escrowId, [FromBody] ReleaseEscrowRequest request)
+        public async Task<IActionResult> Release(Guid escrowId, [FromBody] ReleaseEscrowRequest request)
         {
             var providerId = GetCurrentUserId();
             try
@@ -66,7 +66,7 @@ namespace LocaLe.EscrowApi.Controllers
         [ProducesResponseType(typeof(EscrowResponse), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(403)]
-        public async Task<IActionResult> Dispute(int escrowId)
+        public async Task<IActionResult> Dispute(Guid escrowId)
         {
             var actorId = GetCurrentUserId();
             try
@@ -91,7 +91,7 @@ namespace LocaLe.EscrowApi.Controllers
         [ProducesResponseType(typeof(EscrowResponse), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(403)]
-        public async Task<IActionResult> Cancel(int escrowId)
+        public async Task<IActionResult> Cancel(Guid escrowId)
         {
             var actorId = GetCurrentUserId();
             try
@@ -110,21 +110,46 @@ namespace LocaLe.EscrowApi.Controllers
         }
 
         /// <summary>
+        /// Generates a new QR token for a secured escrow if the old one expired.
+        /// </summary>
+        [HttpPost("{escrowId}/refresh-qr")]
+        [ProducesResponseType(typeof(EscrowResponse), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(403)]
+        public async Task<IActionResult> RefreshQr(Guid escrowId)
+        {
+            var buyerId = GetCurrentUserId();
+            try
+            {
+                var result = await _escrowService.RefreshQrAsync(escrowId, buyerId);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, new { Error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Get the immutable audit trail for an escrow.
         /// </summary>
         [HttpGet("{escrowId}/audit")]
         [ProducesResponseType(typeof(List<AuditLogResponse>), 200)]
-        public async Task<IActionResult> GetAuditLogs(int escrowId)
+        public async Task<IActionResult> GetAuditLogs(Guid escrowId)
         {
             var logs = await _escrowService.GetAuditLogsAsync(escrowId);
             return Ok(logs);
         }
 
-        private int GetCurrentUserId()
+        private Guid GetCurrentUserId()
         {
             var claim = User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? throw new UnauthorizedAccessException("User ID not found in token.");
-            return int.Parse(claim);
+            return Guid.Parse(claim);
         }
     }
 }

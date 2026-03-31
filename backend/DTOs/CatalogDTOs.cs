@@ -12,6 +12,9 @@ namespace LocaLe.EscrowApi.DTOs
         /// Populated for root categories to contain all subcategories in one tree.
         /// </summary>
         public List<CategoryResponse> SubCategories { get; set; } = new List<CategoryResponse>();
+
+        public int ServiceCount { get; set; }
+
     }
 
     public class ServiceResponse
@@ -31,6 +34,7 @@ namespace LocaLe.EscrowApi.DTOs
         public decimal? Latitude { get; set; }
         public decimal? Longitude { get; set; }
         public string? AreaName { get; set; }
+        public bool IsRemote { get; set; }
     }
 
     public class CreateServiceRequest
@@ -43,6 +47,7 @@ namespace LocaLe.EscrowApi.DTOs
         public decimal? Latitude { get; set; }
         public decimal? Longitude { get; set; }
         public string? AreaName { get; set; }
+        public bool IsRemote { get; set; }
     }
 
     public class UpdateServiceRequest
@@ -55,5 +60,6 @@ namespace LocaLe.EscrowApi.DTOs
         public decimal? Latitude { get; set; }
         public decimal? Longitude { get; set; }
         public string? AreaName { get; set; }
+        public bool? IsRemote { get; set; }
     }
 }

@@ -11,17 +11,23 @@ namespace LocaLe.EscrowApi.Services
         private readonly IBookingRepository _bookingRepo;
         private readonly IWalletRepository _walletRepo;
         private readonly IAuditLogRepository _auditRepo;
+        private readonly IUserRepository _userRepo;
+        private readonly IServiceRepository _serviceRepo;
 
         public EscrowService(
             IEscrowRepository escrowRepo,
             IBookingRepository bookingRepo,
             IWalletRepository walletRepo,
-            IAuditLogRepository auditRepo)
+            IAuditLogRepository auditRepo,
+            IUserRepository userRepo,
+            IServiceRepository serviceRepo)
         {
             _escrowRepo = escrowRepo;
             _bookingRepo = bookingRepo;
             _walletRepo = walletRepo;
             _auditRepo = auditRepo;
+            _userRepo = userRepo;
+            _serviceRepo = serviceRepo;
         }
 
         public async Task<EscrowResponse> SecureFundsAsync(Guid bookingId, Guid buyerId, decimal initialDepositPercent = 1.0m)
@@ -162,7 +168,27 @@ namespace LocaLe.EscrowApi.Services
                     Details = $"Full payout of ₦{escrow.Amount:N2} completed to provider {providerId}."
                 });
 
+                // Algorithm: Successful securely completed jobs dynamically increase network trust parameters.
+                var provNode = await _userRepo.GetByIdAsync(escrow.ProviderId);
+                if (provNode != null)
+                {
+                    provNode.TotalVouchPoints += 15;
+                    _userRepo.Update(provNode);
+                }
+
+                if (escrow.Booking?.Job?.ServiceId != null)
+                {
+                    var svcTarget = await _serviceRepo.GetByIdAsync(escrow.Booking.Job.ServiceId.Value);
+                    if (svcTarget != null)
+                    {
+                        svcTarget.TrustPoints += 15;
+                        _serviceRepo.Update(svcTarget);
+                    }
+                }
+
                 await _escrowRepo.SaveChangesAsync();
+                await _userRepo.SaveChangesAsync();
+                await _serviceRepo.SaveChangesAsync();
                 await _auditRepo.SaveChangesAsync();
                 await _escrowRepo.CommitTransactionAsync();
 

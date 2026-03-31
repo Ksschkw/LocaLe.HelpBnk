@@ -15,21 +15,18 @@ using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Inject .env local file parsing so it directly overrides appsettings.json locally.
+DotNetEnv.Env.Load();
+
 // ═══════════════════════════════════════════════════════════
-// 1. DATABASE — SQLite for dev, PostgreSQL for prod
+// 1. DATABASE — PostgreSQL / Supabase
 // ═══════════════════════════════════════════════════════════
-var dbProvider = builder.Configuration["DatabaseProvider"] ?? "SQLite";
-if (dbProvider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase))
-{
-    builder.Services.AddDbContext<EscrowContext>(options =>
-        options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL")));
-}
-else
-{
-    builder.Services.AddDbContext<EscrowContext>(options =>
-        options.UseSqlite(builder.Configuration.GetConnectionString("SQLite")
-            ?? "Data Source=localedb.sqlite"));
-}
+builder.Configuration.AddEnvironmentVariables(); // Force explicit env overrides
+var connStr = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? "Host=aws-0-eu-central-1.pooler.supabase.com;Port=5432;Database=postgres;User Id=postgres;Password=xxx;";
+
+builder.Services.AddDbContext<EscrowContext>(options =>
+    options.UseNpgsql(connStr));
 
 // ═══════════════════════════════════════════════════════════
 // 2. DEPENDENCY INJECTION — Services (loosely coupled)

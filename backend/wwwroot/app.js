@@ -146,7 +146,12 @@ async function apiCall(method, endpoint, body) {
             } else {
                 const text = await response.text();
                 console.error("Non-JSON Error:", text);
-                throw new Error(`Server Error ${response.status}: The request failed natively.`);
+                
+                if (response.status === 401) throw new Error("Session expired or Unauthorized. Please log in again.");
+                if (response.status === 403) throw new Error("You do not have permission to perform this action.");
+                if (response.status === 404) throw new Error("Requested resource was not found. 🤷");
+
+                throw new Error(`Server Error ${response.status}: ${text || 'Execution failed natively'}`);
             }
         }
 
@@ -253,11 +258,12 @@ async function fetchDiscover() {
         const listCats = document.getElementById('list-categories');
         listCats.innerHTML = `<div class="card col" onclick="fetchDiscover()" style="min-width:70px; margin:0 10px 0 0; padding:0.8rem; align-items:center; text-align:center; cursor:pointer; border:1px solid var(--brand-primary);"><h4 style="margin:0; font-size:0.8rem; color:var(--brand-primary);">✦ All</h4></div>` +
             cats.map(c => `
-            <div class="card col" onclick="fetchServicesByCategory('${c.id}','${c.name.replace(/'/g, "\\'")}')"
-                style="min-width: 140px; margin: 0 10px 0 0; padding: 1rem; align-items:center; text-align:center; cursor:pointer; transition:border-color 0.2s;"
-                onmouseover="this.style.borderColor='var(--brand-primary)'" onmouseout="this.style.borderColor=''">
-                <h4 style="margin:0; font-size: 0.9rem;">${c.name}</h4>
-                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">${c.serviceCount || 0} providers</div>
+            <div class="card col glass-card animate-slide-up" onclick="fetchServicesByCategory('${c.id}','${c.name.replace(/'/g, "\\'")}')"
+                style="min-width: 140px; margin: 0 10px 0 0; padding: 1.5rem 1rem; align-items:center; text-align:center; cursor:pointer;"
+                >
+                <div style="font-size:2rem; margin-bottom:0.5rem; filter:drop-shadow(0 2px 4px rgba(0,255,100,0.5));">📦</div>
+                <h4 style="margin:0; font-size: 0.95rem; font-weight:800; letter-spacing:0.5px;">${c.name}</h4>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px; font-weight:600;">${c.serviceCount || 0} providers</div>
             </div>
         `).join('');
 
@@ -318,10 +324,13 @@ function toggleCustomCategory(val) {
 }
 
 function renderServicesList(svcs, containerId) {
-    const listSvcs = document.getElementById(containerId);
-    if (!svcs || svcs.length === 0) { listSvcs.innerHTML = '<p>No active services found.</p>'; return; }
-
-    listSvcs.innerHTML = svcs.map(s => {
+    const list = document.getElementById(containerId);
+    if (!svcs || svcs.length === 0) {
+        list.innerHTML = '<p style="text-align:center; padding:2rem; color:var(--text-secondary);">No services visible here yet.</p>';
+        return;
+    }
+    list.innerHTML = svcs.map((s, index) => {
+        const delay = index * 0.1;
         const isOwner = s.providerId === State.userId;
         const vouchBtn = isOwner ? '' : `<button class="vouch-btn" onclick="vouchForService('${s.id}')">👍 Vouch (${s.trustPoints})</button>`;
         const actionArea = isOwner 
@@ -329,18 +338,19 @@ function renderServicesList(svcs, containerId) {
             : `<button class="btn btn-primary btn-sm" onclick="requestDirectService('${s.id}', '${s.title.replace(/'/g, "\\'")}', ${s.basePrice})">Book</button>`;
 
         return `
-        <div class="card col gap-2" style="margin-bottom: 0;">
+        <div class="card col gap-2 glass-card animate-slide-up" style="margin-bottom: 0; animation-delay: ${delay}s;">
             <div class="row">
-                <h3 style="margin:0;">${s.title} ${s.isRemote ? '<span style="font-size:0.6rem; background:var(--brand-primary); padding:2px 6px; border-radius:10px; vertical-align:middle; margin-left:5px; color:#000;">REMOTE</span>' : ''}</h3>
-                <div style="font-weight: 700; color: var(--success);">₦${s.basePrice}</div>
+                <h3 style="margin:0; letter-spacing:-0.5px;">${s.title} ${s.isRemote ? '<span style="font-size:0.6rem; background:var(--brand-primary); padding:2px 6px; border-radius:10px; vertical-align:middle; margin-left:5px; color:#000;">REMOTE</span>' : ''}</h3>
+                <div style="font-weight: 800; color: var(--success); font-size:1.1rem;">₦${s.basePrice}</div>
             </div>
             ${s.areaName && !s.isRemote ? `<div style="font-size:0.75rem; color:var(--text-secondary);">📍 ${s.areaName}</div>` : ''}
-            <p style="margin:0; font-size:0.9rem;">${s.description}</p>
-            <div class="row-start" style="margin-top: 0.5rem;">
+            <p style="margin:0; font-size:0.9rem; margin-top:0.3rem;">${s.description}</p>
+            <div class="row-start" style="margin-top: 0.5rem; justify-content: space-between;">
                 ${vouchBtn}
+                <button class="btn btn-secondary btn-sm" onclick="joinWaitlist('${s.id}', '${s.title.replace(/'/g, "\\'")}')" style="background:transparent; border:1px solid var(--border-color);">Waitlist</button>
             </div>
             <div class="row" style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 0.8rem;">
-                <span style="font-size:0.8rem; color:var(--brand-primary); cursor:pointer; font-weight:600;" onclick="viewPublicProfile('${s.providerId}')">👤 ${s.providerName}</span>
+                <span style="font-size:0.8rem; color:var(--brand-primary); cursor:pointer; font-weight:600;" onclick="viewPublicProfile('${s.providerId}')">👤 ${s.providerName || '@Provider'}</span>
                 <div class="row-start">
                     ${actionArea}
                 </div>

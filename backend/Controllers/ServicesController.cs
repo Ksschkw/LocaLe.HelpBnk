@@ -75,9 +75,13 @@ namespace LocaLe.EscrowApi.Controllers
         /// </summary>
         [HttpGet]
         [ProducesResponseType(typeof(List<ServiceResponse>), 200)]
-        public async Task<IActionResult> GetAllServices()
+        public async Task<IActionResult> GetAllServices([FromQuery] double? lat, [FromQuery] double? lon, [FromQuery] double? radiusKm)
         {
             var services = await _servicesService.GetAllActiveServicesAsync();
+
+            // Trust Engine: Bubble highest trust services to the top naturally
+            services = services.OrderByDescending(s => s.TrustPoints).ToList();
+
             return Ok(services);
         }
 

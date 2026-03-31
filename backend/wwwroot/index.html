@@ -194,7 +194,12 @@
                         <button class="btn btn-primary btn-sm" onclick="openCreateServiceSheet()">+ Host Service</button>
                     </div>
                     <div class="content-padding">
-                        <form id="form-search" onsubmit="handleSearch(event)" class="col gap-2" style="background: var(--bg-surface); padding: 0.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 2rem;">
+                        <div class="hero-banner">
+                            <h1 style="font-size: 2rem; margin-bottom: 0.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Explore Your Street</h1>
+                            <p style="opacity: 0.9; margin: 0;">Top-rated local services secured by smart escrow logic.</p>
+                        </div>
+
+                        <form id="form-search" onsubmit="handleSearch(event)" class="col gap-2 glass-card" style="padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 2rem;">
                             <div class="row gap-2">
                                 <span style="padding-left: 0.5rem;">🔍</span>
                                 <input type="text" id="search-query" onkeyup="handleSearchAutocomplete(event)" list="discover-suggestions" style="background: transparent; border: none; color: white; flex: 1; outline: none; font-size: 1rem;" placeholder="Search plumbers, IT, mechanics...">

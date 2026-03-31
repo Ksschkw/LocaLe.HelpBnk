@@ -1,0 +1,8 @@
+bin/
+obj/
+.git/
+.dockerignore
+Dockerfile
+appsettings.Development.json
+localedb.sqlite
+.env

@@ -1,0 +1,18 @@
+# Ignore everything in the entire repository...
+**
+*
+
+# ...Except the backend directory
+!backend/
+!backend/**
+
+# Standard git and IDE excludes
+.git/
+.VSCode/
+.vs/
+.env
+
+# Also exclude compiled items even within backend explicitly
+backend/bin/
+backend/obj/
+backend/.env

@@ -193,6 +193,47 @@ namespace LocaLe.EscrowApi.Controllers
             catch (InvalidOperationException ex) { return BadRequest(new { Error = ex.Message }); }
         }
 
+        // ─── SUPER ADMIN UTILITIES ────────────────────────────────────────
+
+        [HttpPost("broadcast")]
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> SystemBroadcast(
+            [FromServices] LocaLe.EscrowApi.Interfaces.Repositories.IUserRepository userRepo,
+            [FromServices] LocaLe.EscrowApi.Interfaces.INotificationService notifService,
+            [FromBody] BroadcastRequest request)
+        {
+            var allUsers = await userRepo.GetAllAsync();
+            foreach (var user in allUsers)
+            {
+                await notifService.CreateAsync(user.Id, LocaLe.EscrowApi.Models.NotificationType.NewMessage, "SYSTEM BROADCAST", request.Message, null, null);
+            }
+            return Ok(new { Message = $"Broadcast deployed to {allUsers.Count()} active users." });
+        }
+
+        [HttpDelete("users/{id}")]
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> EradicateUser(
+            [FromServices] LocaLe.EscrowApi.Interfaces.Repositories.IUserRepository userRepo,
+            Guid id)
+        {
+            var target = await userRepo.GetByIdAsync(id);
+            if (target == null) return NotFound();
+
+            if (target.Role == LocaLe.EscrowApi.Models.UserRole.SuperAdmin)
+                return BadRequest(new { Error = "Core architecture prohibits purging a SuperAdmin sequence." });
+
+            target.Role = LocaLe.EscrowApi.Models.UserRole.User;
+            target.TotalVouchPoints = -999;
+            target.Tier = LocaLe.EscrowApi.Models.UserTier.Bronze;
+            
+            userRepo.Update(target);
+            await userRepo.SaveChangesAsync();
+
+            return Ok(new { Message = "User effectively neutralized." });
+        }
+
+        public class BroadcastRequest { public string Message { get; set; } = string.Empty; }
+
         // ─── Earnings & Payments ─────────────────────────────
 
         /// <summary>

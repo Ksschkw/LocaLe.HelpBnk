@@ -21,7 +21,10 @@
   <nav class="nav" id="nav">
     <div class="nav__inner">
       <div class="nav__logo">LocaLe</div>
-      <button class="btn-cta btn-cta--sm nav__cta" onclick="openModal('nav')">Join Waitlist</button>
+      <div class="row gap-2">
+          <a href="https://p01--locale--qw5xhkblp8hy.code.run/" class="btn-cta btn-cta--sm nav__cta" style="background: var(--brand-primary); color: black;">Try App</a>
+          <button class="btn-cta btn-cta--sm nav__cta" onclick="openModal('nav')">Join Waitlist</button>
+      </div>
     </div>
   </nav>
 
@@ -49,10 +52,12 @@
       </p>
 
       <div class="hero__actions">
-        <button class="btn-cta btn-cta--lg pulse" onclick="openModal('hero')">
-          🚀 Join the Waitlist — It's Free
+        <a href="https://p01--locale--qw5xhkblp8hy.code.run/" class="btn-cta btn-cta--lg pulse" style="background: var(--brand-primary); color: black; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+          ⚡ Try the App Live
+        </a>
+        <button class="btn-cta btn-cta--lg" onclick="openModal('hero')" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">
+          🚀 Join Waitlist
         </button>
-        <a href="#how" class="hero__link">See how it works ↓</a>
       </div>
 
       <div class="hero__stats">

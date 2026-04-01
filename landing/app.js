@@ -7,6 +7,7 @@
    - Passive tracking: device, OS, browser, network, scroll, time-on-page, session
    - Browser Geolocation + IP fallback
    - Google Sheets form submission (no backend)
+   - Phone number validation (Nigerian format)
    ================================================ */
 
 // ================================================
@@ -232,10 +233,31 @@ async function captureLocation() {
 }
 
 // ================================================
-// FORM SUBMISSION → GOOGLE SHEETS
+// PHONE VALIDATION (Nigerian format)
+// ================================================
+function validatePhoneNumber(phone) {
+  // Remove spaces, dashes, and any non-digit characters except leading +
+  let cleaned = phone.replace(/\s|-/g, '');
+  // Check if it's a Nigerian number: starts with 0 followed by 10 digits (total 11)
+  // Or starts with +234 followed by 10 digits (total 14)
+  const nigerianRegex = /^(0[789][01]\d{8}|(\+234)[789][01]\d{8})$/;
+  return nigerianRegex.test(cleaned);
+}
+
+// ================================================
+// FORM SUBMISSION → GOOGLE SHEETS (with validation)
 // ================================================
 async function submitForm(event) {
   event.preventDefault();
+
+  // Phone validation
+  const phoneInput = document.querySelector('input[name="phone"]');
+  const phone = phoneInput.value.trim();
+  if (!validatePhoneNumber(phone)) {
+    alert("Please enter a valid Nigerian phone number (e.g., 08012345678 or +2348012345678).");
+    phoneInput.focus();
+    return;
+  }
 
   const form        = document.getElementById('waitlistForm');
   const submitBtn   = document.getElementById('submitBtn');
@@ -307,7 +329,7 @@ function showSuccess() {
 // ================================================
 function shareOnWhatsApp() {
   const text = encodeURIComponent(
-    "I just joined the LocaLe pilot — an escrow service for neighborhood jobs in FUTO area 🔥\n\n" +
+    "I just joined the LocaLe pilot — an escrow service for neighborhood jobs 🔥\n\n" +
     "No more getting scammed. Money is held until the job is done with QR verification.\n\n" +
     "Join here: " + window.location.href
   );
@@ -372,7 +394,7 @@ async function initLocationPicker() {
       // Populate countries
       countries.forEach(c => {
         const opt = document.createElement('option');
-        opt.value = c.name; // Use name as value to pass to API later
+        opt.value = c.name;
         opt.textContent = c.name;
         countryEl.appendChild(opt);
       });

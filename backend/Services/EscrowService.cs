@@ -60,7 +60,7 @@ namespace LocaLe.EscrowApi.Services
                 buyerWallet.Balance -= initialAmount;
                 _walletRepo.Update(buyerWallet);
 
-                var qrToken = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+                var qrToken = new Random().Next(100000, 999999).ToString();
 
                 var escrow = new Escrow
                 {
@@ -173,16 +173,27 @@ namespace LocaLe.EscrowApi.Services
                 if (provNode != null)
                 {
                     provNode.TotalVouchPoints += 15;
+                    provNode.JobsCompleted += 1;
                     _userRepo.Update(provNode);
                 }
 
-                if (escrow.Booking?.Job?.ServiceId != null)
+                if (escrow.Booking != null)
                 {
-                    var svcTarget = await _serviceRepo.GetByIdAsync(escrow.Booking.Job.ServiceId.Value);
-                    if (svcTarget != null)
+                    escrow.Booking.Status = BookingStatus.Finalized;
+                    _bookingRepo.Update(escrow.Booking);
+                    
+                    if (escrow.Booking.Job != null)
                     {
-                        svcTarget.TrustPoints += 15;
-                        _serviceRepo.Update(svcTarget);
+                        escrow.Booking.Job.Status = JobStatus.Completed;
+                        if (escrow.Booking.Job.ServiceId != null)
+                        {
+                            var svcTarget = await _serviceRepo.GetByIdAsync(escrow.Booking.Job.ServiceId.Value);
+                            if (svcTarget != null)
+                            {
+                                svcTarget.TrustPoints += 15;
+                                _serviceRepo.Update(svcTarget);
+                            }
+                        }
                     }
                 }
 
@@ -298,7 +309,7 @@ namespace LocaLe.EscrowApi.Services
             if (escrow.BuyerId != buyerId)
                 throw new UnauthorizedAccessException("Only the buyer can refresh the QR token.");
 
-            escrow.QrToken = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+            escrow.QrToken = new Random().Next(100000, 999999).ToString();
             escrow.QrTokenExpiry = DateTime.UtcNow.AddMinutes(15);
             _escrowRepo.Update(escrow);
 

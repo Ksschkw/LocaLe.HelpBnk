@@ -86,6 +86,7 @@ namespace LocaLe.EscrowApi.Controllers
                 Role = user.Role.ToString(),
                 TrustScore = user.TrustScore,
                 Bio = user.Bio,
+                TotalVouchPoints = user.TotalVouchPoints,
                 JobsCompleted = user.JobsCompleted,
                 Latitude = user.Latitude,
                 Longitude = user.Longitude,
@@ -156,10 +157,10 @@ namespace LocaLe.EscrowApi.Controllers
         {
             var userId = GetCurrentUserId();
             var wallet = await _walletRepo.GetByUserIdAsync(userId);
-            var cost = 5000m; 
+            var cost = 10000m; 
 
             if (wallet == null || wallet.Balance < cost)
-                return BadRequest(new { Error = "Insufficient funds (₦5000 required) to purchase Elite Badge." });
+                return BadRequest(new { Error = "Insufficient funds (₦10000 required) to purchase Elite Badge." });
 
             wallet.Balance -= cost;
             _walletRepo.Update(wallet);
@@ -190,7 +191,7 @@ namespace LocaLe.EscrowApi.Controllers
 
         /// <summary>
         /// View the public profile details of another user (e.g. before hiring them).
-        /// Returns Name, Avatar, Tier, and TrustScore.
+        /// Returns Name, Avatar, Tier, and TrustScore metrics.
         /// </summary>
         [HttpGet("{user_id}")]
         public async Task<IActionResult> GetUser(Guid user_id)
@@ -204,9 +205,10 @@ namespace LocaLe.EscrowApi.Controllers
                 AvatarUrl = user.AvatarUrl,
                 Tier = user.Tier.ToString(),
                 TrustScore = user.TrustScore,
+                TotalVouchPoints = user.TotalVouchPoints,
+                JobsCompleted = user.JobsCompleted,
                 CreatedAt = user.CreatedAt,
-                Bio = user.Bio,
-                JobsCompleted = user.JobsCompleted
+                Bio = user.Bio
             });
         }
 

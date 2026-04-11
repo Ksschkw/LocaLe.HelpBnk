@@ -1,0 +1,212 @@
+.authContainer {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+@media (min-width: 768px) {
+  .authContainer {
+    flex-direction: row;
+  }
+}
+
+.leftPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  position: relative;
+  border-right: 1px solid var(--border);
+}
+
+.rightPanel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+}
+
+@media (max-width: 767px) {
+  .leftPanel.hidden, .rightPanel.hidden { display: none; }
+  .leftPanel.visible, .rightPanel.visible { display: flex; width: 100%; min-height: 100dvh; }
+}
+
+.glow1 {
+  position: absolute; width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(0, 200, 83, 0.12) 0%, transparent 70%);
+  top: -200px; left: -200px;
+  pointer-events: none;
+  animation: float 8s ease-in-out infinite;
+}
+
+.glow2 {
+  position: absolute; width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(68, 138, 255, 0.07) 0%, transparent 70%);
+  bottom: -100px; right: -100px;
+  pointer-events: none;
+  animation: float 10s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(20px, -20px); }
+}
+
+.logo {
+  font-size: 2.8rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--text), var(--text-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -2px;
+  position: relative;
+  z-index: 1;
+}
+
+.dot { color: var(--brand-primary); -webkit-text-fill-color: var(--brand-primary); }
+
+.slideArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 40px 0;
+}
+
+.slide {
+  position: absolute;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  width: 100%;
+}
+
+.slideActive {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  position: relative;
+}
+
+.slideEmoji { font-size: 4rem; margin-bottom: 20px; }
+
+.slideTitle {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--text) 0%, var(--text-2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.slideDesc {
+  font-size: 1rem;
+  color: var(--text-2);
+  max-width: 280px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.dots { display: flex; gap: 8px; margin-top: 32px; }
+
+.dotBtn {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.dotActive {
+  background: var(--brand-primary);
+  width: 24px;
+  border-radius: 4px;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 768px) {
+  .actions {
+    display: none; /* Hidden on desktop since forms are always visible */
+  }
+}
+
+/* Auth Card */
+.authCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 36px 28px;
+  width: 100%;
+  max-width: 400px;
+  backdrop-filter: blur(20px);
+  position: relative;
+  z-index: 1;
+  box-shadow: var(--shadow-md);
+}
+
+.authLogo {
+  font-size: 1.8rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--text), var(--text-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 20px;
+  text-align: center;
+  letter-spacing: -1px;
+}
+
+.authTitle { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; text-align: center; margin-bottom: 6px; }
+.authSub { font-size: 0.9rem; color: var(--text-2); text-align: center; margin-bottom: 28px; }
+
+.form { display: flex; flex-direction: column; gap: 16px; }
+
+.switch { text-align: center; font-size: 0.85rem; color: var(--text-2); }
+.switch button { background: none; border: none; color: var(--brand-primary); font-weight: 700; cursor: pointer; }
+
+.back {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-size: 1.2rem;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s;
+}
+.back:hover { color: var(--text); border-color: var(--border-hover); }
+
+@media (min-width: 768px) {
+  .back { display: none; }
+}

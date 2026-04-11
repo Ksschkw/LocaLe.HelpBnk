@@ -19,6 +19,7 @@ namespace LocaLe.EscrowApi.Interfaces
         Task<List<JobResponse>> GetMyServiceRequestsAsync(Guid providerId);
         Task<JobResponse> ConfirmCompletionAsync(Guid creatorId, Guid jobId);
         Task<JobResponse> CreateJobForServiceAsync(Guid creatorId, Guid serviceId, CreateJobRequest request);
+        Task<List<BookingResponse>> GetApplicantsForJobAsync(Guid jobId, Guid requesterId);
     }
 
     public interface IBookingService

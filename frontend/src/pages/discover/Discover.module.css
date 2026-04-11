@@ -1,0 +1,152 @@
+.page { min-height: 100dvh; padding-bottom: calc(var(--nav-h) + 16px); }
+
+.content { padding: 0 16px 24px; }
+
+/* Hero */
+.hero {
+  position: relative;
+  margin: 0 -16px;
+  padding: 40px 24px 32px;
+  overflow: hidden;
+}
+
+.heroBg {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(0, 200, 83, 0.08) 0%, transparent 70%);
+}
+
+.heroTitle {
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: -1px;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.heroSub {
+  font-size: 0.9rem;
+  color: var(--text-2);
+  position: relative;
+}
+
+/* Search */
+.searchWrap { margin: 16px 0; }
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  padding: 12px 16px;
+  transition: border-color 0.2s;
+}
+
+.searchBar:focus-within { border-color: var(--brand-primary); }
+
+.searchIcon { color: var(--text-3); flex-shrink: 0; }
+
+.searchInput {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-family: var(--font);
+}
+.searchInput::placeholder { color: var(--text-3); }
+
+.filterBtn {
+  color: var(--text-2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+.filterBtn:hover { color: var(--brand-primary); }
+
+.filters {
+  margin-top: 10px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.filterRow {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 0.9rem; color: var(--text-2); cursor: pointer;
+}
+
+/* Categories */
+.catScroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+  scrollbar-width: none;
+}
+.catScroll::-webkit-scrollbar { display: none; }
+
+.catPill {
+  padding: 6px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-2);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.catActive {
+  background: var(--brand-soft);
+  border-color: rgba(0, 200, 83, 0.35);
+  color: var(--brand-primary);
+}
+
+.sectionTitle { font-size: 1rem; font-weight: 700; margin-bottom: 12px; }
+
+/* Service Card */
+.serviceCard { margin-bottom: 12px; }
+
+.serviceTop { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+
+.serviceMeta { display: flex; align-items: center; gap: 10px; }
+
+.serviceAvatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--brand-primary), #448AFF);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 1.1rem; color: white;
+  flex-shrink: 0;
+}
+
+.providerName { font-size: 0.9rem; font-weight: 700; }
+.providerTier { font-size: 0.75rem; margin-top: 2px; }
+
+.priceWrap { text-align: right; }
+.price { font-size: 1.1rem; font-weight: 800; color: var(--brand-primary); }
+.hourly { font-size: 0.75rem; color: var(--text-3); }
+
+.serviceTitle { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+.serviceDesc { font-size: 0.85rem; color: var(--text-2); line-height: 1.5; margin-bottom: 10px; }
+
+.serviceTags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.tagGreen { padding: 3px 10px; border-radius: var(--radius-full); background: var(--brand-soft); color: var(--brand-primary); font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+.tagBlue  { padding: 3px 10px; border-radius: var(--radius-full); background: rgba(68, 138, 255, 0.1); color: var(--info); font-size: 0.72rem; font-weight: 700; }
+.tagGray  { padding: 3px 10px; border-radius: var(--radius-full); background: var(--bg-hover); color: var(--text-3); font-size: 0.72rem; display: flex; align-items: center; gap: 3px; }
+
+.empty { text-align: center; padding: 60px 24px; color: var(--text-2); }
+.empty p { margin-top: 12px; font-size: 0.9rem; }

@@ -1,0 +1,26 @@
+.page { min-height: 100dvh; padding-bottom: calc(var(--nav-h) + 16px); }
+.content { padding: 16px; max-width: 500px; margin: 0 auto; }
+
+.form { display: flex; flex-direction: column; gap: 16px; }
+
+.inputGroup { display: flex; flex-direction: column; gap: 6px; }
+.label { font-size: 0.8rem; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
+
+.select, .textarea {
+  width: 100%; padding: 14px 16px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-md); color: var(--text);
+  font-family: var(--font); font-size: 1rem; outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.select:focus, .textarea:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 3px var(--brand-soft); }
+.textarea { resize: vertical; min-height: 100px; }
+
+.toggleRow {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; background: rgba(0,0,0,0.2); border-radius: var(--radius-md);
+  font-size: 0.9rem;
+}
+
+.toggle { width: 44px; height: 24px; accent-color: var(--brand-primary); cursor: pointer; }

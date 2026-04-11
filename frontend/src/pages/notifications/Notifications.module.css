@@ -1,0 +1,72 @@
+.page {
+  padding-bottom: 80px;
+  min-height: 100dvh;
+}
+
+.content {
+  padding: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.title {
+  margin: 0;
+}
+
+.card {
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.card:hover {
+  background: var(--bg-color);
+}
+
+.card.unread {
+  border-left: 4px solid var(--brand-primary);
+  background: rgba(0, 136, 255, 0.05);
+}
+
+.iconWrap {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-color);
+  font-size: 1.2rem;
+}
+
+.info {
+  flex: 1;
+}
+
+.info h4 {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+}
+
+.info p {
+  margin: 0 0 8px 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.time {
+  font-size: 0.75rem;
+  opacity: 0.6;
+}

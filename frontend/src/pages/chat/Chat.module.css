@@ -1,0 +1,135 @@
+.page {
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1;
+  padding: 16px;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 24px;
+  overflow: hidden;
+}
+
+@media (max-width: 800px) {
+  .content {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 16px;
+  }
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.chatArea {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  overflow: hidden;
+  height: 100%;
+}
+
+.messages {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.msgRow {
+  display: flex;
+  width: 100%;
+}
+
+.msgRow.mine {
+  justify-content: flex-end;
+}
+
+.msgBubble {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  position: relative;
+}
+
+.msgRow.mine .msgBubble {
+  background: var(--brand-primary);
+  color: white;
+  border-color: var(--brand-primary);
+  border-bottom-right-radius: 4px;
+}
+
+.msgRow:not(.mine) .msgBubble {
+  border-top-left-radius: 4px;
+}
+
+.msgMeta {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.inputArea {
+  padding: 16px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: var(--surface-color);
+}
+
+.input {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 24px;
+  border: 2px solid #444;
+  background: #000;
+  color: white;
+  outline: none;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.input:focus {
+  border-color: var(--brand-primary);
+}
+
+.escrowBox {
+  padding: 16px;
+  background: rgba(0, 234, 255, 0.05);
+  border: 1px solid rgba(0, 234, 255, 0.2);
+  border-radius: 12px;
+}
+
+.qrToken {
+  font-family: monospace;
+  font-size: 2rem;
+  letter-spacing: 4px;
+  text-align: center;
+  margin: 16px 0;
+  padding: 12px;
+  background: var(--bg-color);
+  border-radius: 8px;
+  border: 1px dashed var(--brand-primary);
+  color: var(--brand-primary);
+  font-weight: bold;
+}

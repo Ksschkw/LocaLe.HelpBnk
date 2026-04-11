@@ -2,9 +2,13 @@
 **
 *
 
-# ...Except the backend directory
+# ...Except the required directories
 !backend/
 !backend/**
+!frontend/
+!frontend/**
+!LocaLe.EscrowApi.Tests/
+!LocaLe.EscrowApi.Tests/**
 
 # Standard git and IDE excludes
 .git/
@@ -12,7 +16,10 @@
 .vs/
 .env
 
-# Also exclude compiled items even within backend explicitly
+# Also exclude compiled items explicitly
 backend/bin/
 backend/obj/
 backend/.env
+frontend/node_modules/
+LocaLe.EscrowApi.Tests/bin/
+LocaLe.EscrowApi.Tests/obj/

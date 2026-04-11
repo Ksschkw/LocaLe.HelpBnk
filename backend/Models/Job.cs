@@ -44,5 +44,13 @@ namespace LocaLe.EscrowApi.Models
         /// </summary>
         public Guid? ServiceId { get; set; }
         public Service? Service { get; set; }
+
+        /// <summary>
+        /// Optional category tag for this job (e.g., Plumbing, Delivery).
+        /// </summary>
+        public string? CategoryName { get; set; }
+
+        /// <summary>All applications (bookings) made against this job.</summary>
+        public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
     }
 }

@@ -50,6 +50,9 @@ namespace LocaLe.EscrowApi.DTOs
 
         [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than zero.")]
         public decimal Amount { get; set; }
+
+        [MaxLength(100)]
+        public string? CategoryName { get; set; }
     }
 
     public class UpdateJobRequest
@@ -80,8 +83,12 @@ namespace LocaLe.EscrowApi.DTOs
         /// <summary>If Assigned — who accepted the job.</summary>
         public string? AssignedProviderName { get; set; }
         public DateTime CreatedAt { get; set; }
-        /// <summary>Human-friendly context: e.g. "Awaiting provider acceptance" or "Funds locked in escrow".</summary>
+        /// <summary>Human-friendly context.</summary>
         public string StatusDetail { get; set; } = string.Empty;
+        /// <summary>Number of providers who have applied.</summary>
+        public int ApplicationCount { get; set; }
+        /// <summary>Optional category tag (e.g., Plumbing, Delivery).</summary>
+        public string? CategoryName { get; set; }
     }
 
     // ─── Booking DTOs ────────────────────────────────────────
@@ -183,6 +190,7 @@ namespace LocaLe.EscrowApi.DTOs
         public string? Phone { get; set; }
         public string Tier { get; set; } = string.Empty;
         public int TotalVouchPoints { get; set; }
+        public int JobsCompleted { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 
@@ -254,11 +262,32 @@ namespace LocaLe.EscrowApi.DTOs
     {
         public Guid Id { get; set; }
         public Guid ServiceId { get; set; }
-        public Guid VoucherId { get; set; }
+        public Guid? VoucherId { get; set; }
         public string VoucherName { get; set; } = string.Empty;
+        public string? GuestName { get; set; }
         public int PointsGiven { get; set; }
         public string? Comment { get; set; }
         public DateTime CreatedAt { get; set; }
+    }
+
+    public class GuestVouchRequest
+    {
+        [Required, MaxLength(20)]
+        public string Phone { get; set; } = string.Empty;
+
+        [Required, MaxLength(100)]
+        public string Name { get; set; } = string.Empty;
+
+        [MaxLength(500)]
+        public string? Comment { get; set; }
+    }
+
+    public class ServicePointsResponse
+    {
+        public Guid ServiceId { get; set; }
+        public int TotalPoints { get; set; }
+        public int PlatformPoints { get; set; }
+        public int GuestPoints { get; set; }
     }
 
     public class WaitlistResponse

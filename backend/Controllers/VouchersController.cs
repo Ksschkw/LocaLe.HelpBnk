@@ -33,11 +33,36 @@ namespace LocaLe.EscrowApi.Controllers
             catch (KeyNotFoundException ex) { return NotFound(new { Error = ex.Message }); }
         }
 
+        [AllowAnonymous]
+        [HttpPost("guest/{serviceId}")]
+        public async Task<IActionResult> GuestVouch(Guid serviceId, [FromBody] GuestVouchRequest request)
+        {
+            // Extract IP and UserAgent for fingerprint heuristic
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
+            var ua = HttpContext.Request.Headers["User-Agent"].ToString();
+
+            try
+            {
+                await _vouchService.GuestVouchAsync(serviceId, request.Phone, request.Name, ip, ua, request.Comment);
+                return Ok(new { Message = "Guest vouch recorded successfully." });
+            }
+            catch (InvalidOperationException ex) { return BadRequest(new { Error = ex.Message }); }
+            catch (KeyNotFoundException ex) { return NotFound(new { Error = ex.Message }); }
+        }
+
+        [AllowAnonymous]
         [HttpGet("{serviceId}/points")]
+        [ProducesResponseType(typeof(ServicePointsResponse), 200)]
         public async Task<IActionResult> GetPoints(Guid serviceId)
         {
-            var points = await _vouchService.GetServicePointsAsync(serviceId);
-            return Ok(new { ServiceId = serviceId, TotalPoints = points });
+            var breakdown = await _vouchService.GetServicePointsBreakdownAsync(serviceId);
+            return Ok(new ServicePointsResponse
+            {
+                ServiceId = serviceId,
+                TotalPoints = breakdown.Total,
+                PlatformPoints = breakdown.Platform,
+                GuestPoints = breakdown.Guest
+            });
         }
 
         private Guid GetCurrentUserId()

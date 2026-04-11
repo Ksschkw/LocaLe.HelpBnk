@@ -273,6 +273,29 @@ namespace LocaLe.EscrowApi.Controllers
         }
 
         // ─── Helpers ─────────────────────────────────────────
+
+        /// <summary>
+        /// Admin manual override to toggle Service Discovery visibility.
+        /// Bypasses the RequiredVouchPoints threshold.
+        /// </summary>
+        [HttpPut("services/{id}/discovery")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> ToggleServiceDiscovery(
+            [FromServices] LocaLe.EscrowApi.Interfaces.Repositories.IServiceRepository serviceRepo,
+            Guid id, [FromQuery] bool enable)
+        {
+            var service = await serviceRepo.GetByIdAsync(id);
+            if (service == null) return NotFound(new { Error = "Service not found." });
+
+            service.IsDiscoveryEnabled = enable;
+            service.IsDiscoveryAdminOverridden = true; // Prevents VouchService from auto-enabling it later if disabled
+            
+            serviceRepo.Update(service);
+            await serviceRepo.SaveChangesAsync();
+            return NoContent();
+        }
+
         private Guid GetCurrentUserId()
         {
             var claim = User.FindFirstValue(ClaimTypes.NameIdentifier)

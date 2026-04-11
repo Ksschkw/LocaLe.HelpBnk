@@ -1,0 +1,6 @@
+.page { min-height: 100dvh; background: #000; color: #fff; }
+.tabs { display: flex; padding: 16px; gap: 8px; border-bottom: 1px solid #222; }
+.tab { flex: 1; padding: 8px; border-radius: 8px; background: #111; color: #888; border: 1px solid #333; }
+.active { background: #300; border-color: red; color: red; }
+.content { padding: 16px; }
+.cardRow { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }

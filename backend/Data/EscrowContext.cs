@@ -62,7 +62,7 @@ namespace LocaLe.EscrowApi.Data
             modelBuilder.Entity<Booking>(entity =>
             {
                 entity.HasOne(b => b.Job)
-                      .WithMany()
+                      .WithMany(j => j.Bookings)
                       .HasForeignKey(b => b.JobId)
                       .OnDelete(DeleteBehavior.Restrict);
 

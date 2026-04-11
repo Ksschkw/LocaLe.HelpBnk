@@ -22,6 +22,8 @@ namespace LocaLe.EscrowApi.DTOs
         public Guid Id { get; set; }
         public Guid ProviderId { get; set; }
         public string ProviderName { get; set; } = string.Empty;
+        public string ProviderTier { get; set; } = string.Empty;
+        public int ProviderTrustScore { get; set; }
         public Guid CategoryId { get; set; }
         public string CategoryName { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;

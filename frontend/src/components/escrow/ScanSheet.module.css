@@ -1,0 +1,62 @@
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(5, 8, 20, 0.75);
+  backdrop-filter: blur(6px);
+  z-index: 200;
+  display: flex; align-items: flex-end; justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.sheet {
+  background: var(--bg-2);
+  border-top: 1px solid var(--border);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: 12px 24px calc(40px + var(--safe-bottom));
+  width: 100%; max-width: 480px;
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 24px; }
+
+.title { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px; text-align: center; margin-bottom: 8px; }
+.sub { font-size: 0.85rem; color: var(--text-2); text-align: center; margin-bottom: 32px; }
+
+.codeInputRow {
+  display: flex; justify-content: center; gap: 8px;
+  margin-bottom: 12px;
+}
+
+.codeBox {
+  width: 44px; height: 56px;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; font-weight: 900;
+  color: var(--brand-primary);
+  transition: border-color 0.15s;
+  font-variant-numeric: tabular-nums;
+}
+
+.codeBoxFilled { border-color: var(--brand-primary); background: var(--brand-soft); }
+
+.hiddenInput {
+  position: absolute;
+  opacity: 0;
+  width: 1px; height: 1px;
+  pointer-events: none;
+}
+
+.errorMsg { text-align: center; color: var(--error); font-size: 0.85rem; font-weight: 600; margin-bottom: 16px; }
+.hint { text-align: center; font-size: 0.78rem; color: var(--text-3); margin-bottom: 24px; line-height: 1.5; }
+
+.actions { display: flex; flex-direction: column; gap: 10px; }
+
+/* Success */
+.successState { text-align: center; padding: 40px 0; }
+.successIcon { font-size: 4rem; margin-bottom: 16px; animation: bounce 0.6s ease; }
+@keyframes bounce { 0% { transform: scale(0.5); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
+.successState h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; }
+.successState p { color: var(--text-2); font-size: 0.9rem; }

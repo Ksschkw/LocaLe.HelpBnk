@@ -226,6 +226,9 @@ namespace LocaLe.EscrowApi.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("CategoryName")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -424,6 +427,9 @@ namespace LocaLe.EscrowApi.Migrations
                     b.Property<decimal>("HourlyRate")
                         .HasColumnType("numeric");
 
+                    b.Property<bool>("IsDiscoveryAdminOverridden")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsDiscoveryEnabled")
                         .HasColumnType("boolean");
 
@@ -595,6 +601,22 @@ namespace LocaLe.EscrowApi.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("GuestIpAddress")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("GuestName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("GuestPhone")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("GuestUserAgent")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
                     b.Property<bool>("IsPlatformUser")
                         .HasColumnType("boolean");
 
@@ -607,7 +629,7 @@ namespace LocaLe.EscrowApi.Migrations
                     b.Property<Guid>("ServiceId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("VoucherId")
+                    b.Property<Guid?>("VoucherId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -676,7 +698,7 @@ namespace LocaLe.EscrowApi.Migrations
             modelBuilder.Entity("LocaLe.EscrowApi.Models.Booking", b =>
                 {
                     b.HasOne("LocaLe.EscrowApi.Models.Job", "Job")
-                        .WithMany()
+                        .WithMany("Bookings")
                         .HasForeignKey("JobId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -860,8 +882,7 @@ namespace LocaLe.EscrowApi.Migrations
                     b.HasOne("LocaLe.EscrowApi.Models.User", "Voucher")
                         .WithMany()
                         .HasForeignKey("VoucherId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Service");
 
@@ -896,6 +917,11 @@ namespace LocaLe.EscrowApi.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("LocaLe.EscrowApi.Models.Job", b =>
+                {
+                    b.Navigation("Bookings");
                 });
 
             modelBuilder.Entity("LocaLe.EscrowApi.Models.ServiceCategory", b =>

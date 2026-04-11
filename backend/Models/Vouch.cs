@@ -16,12 +16,23 @@ namespace LocaLe.EscrowApi.Models
         [JsonIgnore]
         public Service? Service { get; set; }
 
-        [Required]
-        public Guid VoucherId { get; set; }
+        public Guid? VoucherId { get; set; }
 
         [ForeignKey("VoucherId")]
         [JsonIgnore]
         public User? Voucher { get; set; }
+
+        [MaxLength(20)]
+        public string? GuestPhone { get; set; }
+
+        [MaxLength(100)]
+        public string? GuestName { get; set; }
+
+        [MaxLength(50)]
+        public string? GuestIpAddress { get; set; }
+
+        [MaxLength(300)]
+        public string? GuestUserAgent { get; set; }
 
         public bool IsPlatformUser { get; set; } = false;
 

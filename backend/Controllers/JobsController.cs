@@ -105,6 +105,26 @@ namespace LocaLe.EscrowApi.Controllers
             catch (InvalidOperationException ex) { return BadRequest(new { Error = ex.Message }); }
         }
 
+        /// <summary>
+        /// [BUYER] Get all pending applicants for a job you posted.
+        /// </summary>
+        [HttpGet("{id}/applicants")]
+        [Authorize]
+        [ProducesResponseType(typeof(List<BookingResponse>), 200)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetApplicants(Guid id)
+        {
+            var userId = GetCurrentUserId();
+            try
+            {
+                var applicants = await _jobService.GetApplicantsForJobAsync(id, userId);
+                return Ok(applicants);
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { Error = ex.Message }); }
+            catch (UnauthorizedAccessException) { return Forbid(); }
+        }
+
         private Guid GetCurrentUserId()
         {
             var claim = User.FindFirstValue(ClaimTypes.NameIdentifier)

@@ -15,10 +15,12 @@ namespace LocaLe.EscrowApi.Repositories
         {
             return await _dbSet
                 .Include(j => j.Creator)
-                .Include(j => j.Service)
+                .Include(j => j.Bookings)
+                .Where(j => j.Status == JobStatus.Open && j.ServiceId == null)
                 .OrderByDescending(j => j.CreatedAt)
                 .ToListAsync();
         }
+
 
         public async Task<Job?> GetJobWithCreatorAsync(Guid id)
         {

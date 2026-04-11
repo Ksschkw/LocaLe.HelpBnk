@@ -152,16 +152,33 @@ namespace LocaLe.EscrowApi.Services
             if (booking.Status != BookingStatus.Pending)
                 throw new InvalidOperationException($"Cannot confirm. Booking status is {booking.Status}.");
 
+            // Stage changes in memory but do NOT save yet — save only after escrow succeeds
             booking.Status = BookingStatus.Active;
             booking.Job.Status = JobStatus.Assigned;
 
             _bookingRepo.Update(booking);
             _jobRepo.Update(booking.Job);
+
+            try
+            {
+                // Trigger escrow FIRST — if this throws (e.g. insufficient funds), we don't save
+                await _escrowService.SecureFundsAsync(booking.Id, buyerId, initialDepositPercent);
+            }
+            catch
+            {
+                // Rollback in-memory changes so no corrupt state is persisted
+                booking.Status = BookingStatus.Pending;
+                booking.Job.Status = JobStatus.Open;
+                _bookingRepo.Update(booking);
+                _jobRepo.Update(booking.Job);
+                await _bookingRepo.SaveChangesAsync();
+                await _jobRepo.SaveChangesAsync();
+                throw; // re-throw so caller gets the real error message
+            }
+
+            // Escrow succeeded — now persist the booking/job status upgrade
             await _bookingRepo.SaveChangesAsync();
             await _jobRepo.SaveChangesAsync();
-
-            // Trigger escrow: lock the buyer's funds (partial or full)
-            await _escrowService.SecureFundsAsync(booking.Id, buyerId, initialDepositPercent);
 
             await _auditRepo.AddAsync(new AuditLog
             {

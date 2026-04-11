@@ -31,18 +31,13 @@ namespace LocaLe.EscrowApi.Services
             var user = await _userRepo.GetByIdAsync(creatorId)
                 ?? throw new InvalidOperationException("User not found.");
 
-            var wallet = await _walletRepo.GetByUserIdAsync(creatorId) 
-                ?? throw new InvalidOperationException("User wallet not found.");
-
-            if (wallet.Balance < request.Amount)
-                throw new InvalidOperationException($"Insufficient funds to post this job. Required: ₦{request.Amount:N2}, Available: ₦{wallet.Balance:N2}.");
-
             var job = new Job
             {
                 Title = request.Title,
                 Description = request.Description,
                 Amount = request.Amount,
                 CreatorId = creatorId,
+                CategoryName = request.CategoryName,
                 Status = JobStatus.Open
             };
 
@@ -69,6 +64,8 @@ namespace LocaLe.EscrowApi.Services
                 Status = job.Status.ToString(),
                 CreatorId = job.CreatorId,
                 CreatorName = user.Name,
+                CategoryName = job.CategoryName,
+                ApplicationCount = 0,
                 CreatedAt = job.CreatedAt
             };
         }
@@ -135,6 +132,8 @@ namespace LocaLe.EscrowApi.Services
                 Status = j.Status.ToString(),
                 CreatorId = j.CreatorId,
                 CreatorName = j.Creator != null ? j.Creator.Name : "Unknown",
+                CategoryName = j.CategoryName,
+                ApplicationCount = j.Bookings?.Count(b => b.Status == BookingStatus.Pending) ?? 0,
                 CreatedAt = j.CreatedAt
             }).ToList();
         }
@@ -161,17 +160,26 @@ namespace LocaLe.EscrowApi.Services
         public async Task<List<JobResponse>> GetMyRequestsAsync(Guid creatorId)
         {
             var jobs = await _jobRepo.FindAsync(j => j.CreatorId == creatorId);
-            return jobs.Select(j => new JobResponse
+            // Re-fetch with bookings included
+            var detailedJobs = new List<JobResponse>();
+            foreach (var j in jobs)
             {
-                Id = j.Id,
-                Title = j.Title,
-                Description = j.Description,
-                Amount = j.Amount,
-                Status = j.Status.ToString(),
-                CreatorId = j.CreatorId,
-                CreatorName = "Me",
-                CreatedAt = j.CreatedAt
-            }).ToList();
+                var bookings = await _bookingRepo.GetByJobIdAsync(j.Id);
+                detailedJobs.Add(new JobResponse
+                {
+                    Id = j.Id,
+                    Title = j.Title,
+                    Description = j.Description,
+                    Amount = j.Amount,
+                    Status = j.Status.ToString(),
+                    CreatorId = j.CreatorId,
+                    CreatorName = "Me",
+                    CategoryName = j.CategoryName,
+                    ApplicationCount = bookings.Count(b => b.Status == BookingStatus.Pending),
+                    CreatedAt = j.CreatedAt
+                });
+            }
+            return detailedJobs;
         }
 
         public async Task<List<JobResponse>> GetMyServiceRequestsAsync(Guid providerId)
@@ -197,48 +205,48 @@ namespace LocaLe.EscrowApi.Services
             if (job.CreatorId != creatorId)
                 throw new UnauthorizedAccessException("Only the creator can confirm completion.");
 
-            job.Status = JobStatus.Completed;
-            _jobRepo.Update(job);
-
-            var activeBooking = await _bookingRepo.GetBookingDetailedAsync(job.Id); // Uses GetBookingDetailedAsync (some repos use this for active booking)
+            var activeBooking = await _bookingRepo.GetBookingDetailedAsync(job.Id);
             if (activeBooking == null) 
             {
-                // Try finding directly if there's a custom method, fallback to manual list
                 var list = await _bookingRepo.GetByJobIdAsync(job.Id);
                 activeBooking = list.FirstOrDefault(b => b.Status == BookingStatus.Active);
             }
 
             if (activeBooking != null)
             {
-                activeBooking.Status = BookingStatus.Finalized;
-                _bookingRepo.Update(activeBooking);
-
                 var escrow = await _escrowRepo.GetByBookingIdAsync(activeBooking.Id);
-                if (escrow != null && escrow.Status == LocaLe.EscrowApi.Models.EscrowStatus.Secured)
+                if (escrow != null)
                 {
-                    var providerWallet = await _walletRepo.GetByUserIdAsync(escrow.ProviderId) ?? throw new InvalidOperationException("Provider wallet not found.");
-                    providerWallet.Balance += escrow.Amount;
-                    _walletRepo.Update(providerWallet);
+                    if (escrow.Status != LocaLe.EscrowApi.Models.EscrowStatus.Released)
+                    {
+                        throw new InvalidOperationException("You cannot mark the job as completed until the provider has unlocked the vault using the code.");
+                    }
 
-                    escrow.Status = LocaLe.EscrowApi.Models.EscrowStatus.Released;
-                    escrow.QrToken = null;
-                    escrow.QrTokenExpiry = null;
-                    _escrowRepo.Update(escrow);
+                    activeBooking.Status = BookingStatus.Finalized;
+                    _bookingRepo.Update(activeBooking);
+
+                    // Add to provider's completed jobs stat here as per user request
+                    var provider = await _userRepo.GetByIdAsync(escrow.ProviderId);
+                    if (provider != null)
+                    {
+                        provider.JobsCompleted += 1;
+                        _userRepo.Update(provider);
+                    }
 
                     await _auditRepo.AddAsync(new AuditLog
                     {
                         JobId = job.Id,
-                        ReferenceType = "Escrow",
-                        ReferenceId = escrow.Id,
-                        Action = "REMOTE_RELEASE",
+                        ReferenceType = "Job",
+                        ReferenceId = job.Id,
+                        Action = "COMPLETED",
                         ActorId = creatorId,
-                        Details = $"Job marked complete by Buyer. ₦{escrow.Amount:N2} released to provider."
+                        Details = "Job successfully closed by buyer after vault release."
                     });
                 }
             }
 
             await _jobRepo.SaveChangesAsync();
-            await _escrowRepo.SaveChangesAsync(); // save escrow updates
+            await _escrowRepo.SaveChangesAsync();
             await _walletRepo.SaveChangesAsync();
 
             return new JobResponse
@@ -252,6 +260,27 @@ namespace LocaLe.EscrowApi.Services
                 CreatorName = job.Creator?.Name ?? "Unknown",
                 CreatedAt = job.CreatedAt
             };
+        }
+
+        public async Task<List<BookingResponse>> GetApplicantsForJobAsync(Guid jobId, Guid requesterId)
+        {
+            var job = await _jobRepo.GetByIdAsync(jobId)
+                ?? throw new KeyNotFoundException("Job not found.");
+
+            if (job.CreatorId != requesterId)
+                throw new UnauthorizedAccessException("Only the job creator can view applicants.");
+
+            var bookings = await _bookingRepo.GetPendingApplicationsForJobAsync(jobId);
+            return bookings.Select(b => new BookingResponse
+            {
+                Id = b.Id,
+                JobId = b.JobId,
+                JobTitle = job.Title,
+                ProviderId = b.ProviderId,
+                ProviderName = b.Provider?.Name ?? "Unknown",
+                Status = b.Status.ToString(),
+                CreatedAt = b.CreatedAt
+            }).ToList();
         }
 
         public async Task<JobResponse> CreateJobForServiceAsync(Guid creatorId, Guid serviceId, CreateJobRequest request)

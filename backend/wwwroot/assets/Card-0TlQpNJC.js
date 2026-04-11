@@ -1,0 +1,1 @@
+import{u as e}from"./TopBar-CAAJFiYY.js";var t={card:`_card_m5g5v_1`,glass:`_glass_m5g5v_11`,glow:`_glow_m5g5v_17`,clickable:`_clickable_m5g5v_22`},n=e();function r({children:e,glass:r=!1,glow:i=!1,onClick:a,style:o,className:s=``}){return(0,n.jsx)(`div`,{onClick:a,style:o,className:[t.card,r?t.glass:``,i?t.glow:``,a?t.clickable:``,s].join(` `),children:e})}export{r as t};

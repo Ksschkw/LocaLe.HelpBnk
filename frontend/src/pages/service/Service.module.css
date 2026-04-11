@@ -1,0 +1,73 @@
+.page {
+  min-height: 100%;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 40px;
+}
+
+.headerCard {
+  background: linear-gradient(180deg, rgba(0, 136, 255, 0.05) 0%, transparent 100%);
+  border: 1px solid var(--border);
+}
+
+.providerMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg-2);
+  border: 2px solid var(--brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--brand-primary);
+}
+
+.providerName { font-weight: 700; font-size: 1.1rem; }
+
+.title { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 12px; }
+
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+
+.tagBlue { background: rgba(0, 136, 255, 0.15); color: #0088FF; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+.tagGreen { background: rgba(0, 200, 83, 0.15); color: #00C853; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+.tagGray { background: rgba(255, 255, 255, 0.05); color: var(--text-2); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+
+.priceRow { display: flex; align-items:baseline; gap: 8px; }
+.price { font-size: 1.8rem; font-weight: 900; color: var(--brand-primary); }
+.hourly { color: var(--text-2); font-weight: 600; }
+
+.descCard h3 { font-size: 1.1rem; margin-bottom: 12px; color: var(--text-2); }
+.descCard p { line-height: 1.7; color: var(--text); }
+
+.actionPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.vouchBox {
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vouchInfo h4 { color: #0088FF; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+.vouchInfo p { font-size: 0.85rem; color: var(--text-2); }

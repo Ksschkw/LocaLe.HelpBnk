@@ -146,12 +146,24 @@ namespace LocaLe.EscrowApi.Services
                     });
                 }
 
-                // Release total to provider
+                // Release total to provider (with 10% platform fee deduction)
                 var providerWallet = await _walletRepo.GetByUserIdAsync(escrow.ProviderId)
                     ?? throw new InvalidOperationException("Provider wallet not found.");
 
-                providerWallet.Balance += escrow.Amount;
+                // Fees Logic: 10% goes to the System/SuperAdmin
+                var superAdmins = await _userRepo.FindAsync(u => u.Role == UserRole.SuperAdmin);
+                var superAdmin = superAdmins.FirstOrDefault() ?? throw new InvalidOperationException("Critical: SuperAdmin not found for fee routing.");
+                var superWallet = await _walletRepo.GetByUserIdAsync(superAdmin.Id) ?? throw new InvalidOperationException("Critical: System Wallet not found.");
+
+                decimal platformFeeCut = 0.10m; // 10%
+                decimal feeAmount = escrow.Amount * platformFeeCut;
+                decimal providerAmount = escrow.Amount - feeAmount;
+
+                providerWallet.Balance += providerAmount;
                 _walletRepo.Update(providerWallet);
+
+                superWallet.Balance += feeAmount;
+                _walletRepo.Update(superWallet);
 
                 escrow.Status = EscrowStatus.Released;
                 escrow.QrToken = null;
@@ -165,7 +177,7 @@ namespace LocaLe.EscrowApi.Services
                     ReferenceId = escrow.Id,
                     Action = "FULL_RELEASE",
                     ActorId = providerId,
-                    Details = $"Full payout of ₦{escrow.Amount:N2} completed to provider {providerId}."
+                    Details = $"Payout of ₦{providerAmount:N2} completed to provider {providerId}. Platform fee of ₦{feeAmount:N2} captured."
                 });
 
                 // Algorithm: Successful securely completed jobs dynamically increase network trust parameters.

@@ -240,14 +240,103 @@ namespace LocaLe.EscrowApi.Controllers
         /// Calculate and return the total platform earnings collected from escrow fees.
         /// </summary>
         [HttpGet("platform-earnings")]
+        [Authorize(Roles = "SuperAdmin")]
         [ProducesResponseType(typeof(object), 200)]
-        public IActionResult GetPlatformEarnings()
+        public async Task<IActionResult> GetPlatformEarnings(
+            [FromServices] LocaLe.EscrowApi.Interfaces.Repositories.IUserRepository userRepo,
+            [FromServices] LocaLe.EscrowApi.Interfaces.Repositories.IWalletRepository walletRepo,
+            [FromServices] LocaLe.EscrowApi.Interfaces.Repositories.IAuditLogRepository auditRepo)
         {
-            // Placeholder for platform earnings calculation
+            var superAdmins = await userRepo.FindAsync(u => u.Role == LocaLe.EscrowApi.Models.UserRole.SuperAdmin);
+            var superAdmin = superAdmins.FirstOrDefault();
+            if (superAdmin == null) return NotFound("SuperAdmin not found.");
+
+            var wallet = await walletRepo.GetByUserIdAsync(superAdmin.Id);
+            if (wallet == null) return NotFound("System Wallet not found.");
+
+            // Fetch recent fee captures logs
+            var logs = await auditRepo.FindAsync(a => a.Details.Contains("Platform fee of"));
+            
             return Ok(new {
-                TotalEarnings = 0m,
-                RecentTransactions = new List<object>()
+                TotalEarnings = wallet.Balance,
+                RecentTransactions = logs.OrderByDescending(l => l.Timestamp).Take(20).Select(l => new {
+                    l.Id,
+                    l.Timestamp,
+                    l.Details
+                })
             });
+        }
+
+        /// <summary>
+        /// SuperAdmin Impersonation Protocol: Generate a JWT for any user ID without requiring their password.
+        /// </summary>
+        [HttpPost("impersonate/{userId}")]
+        [Authorize(Roles = "SuperAdmin")]
+        [ProducesResponseType(typeof(AuthResponse), 200)]
+        public async Task<IActionResult> ImpersonateUser(
+            Guid userId,
+            [FromServices] LocaLe.EscrowApi.Interfaces.Repositories.IUserRepository userRepo,
+            [FromServices] LocaLe.EscrowApi.Interfaces.IAuthService authService)
+        {
+            var targetUser = await userRepo.GetByIdAsync(userId);
+            if (targetUser == null) return NotFound(new { Error = "Target user not found." });
+
+            if (targetUser.Role == LocaLe.EscrowApi.Models.UserRole.SuperAdmin && targetUser.Id != GetCurrentUserId())
+            {
+                return BadRequest(new { Error = "You cannot impersonate another SuperAdmin." });
+            }
+
+            // A bit of a hack since AuthService usually validates passwords. 
+            // We just need a generate token function, let's assume authService has one or we can build it.
+            // Wait, we can't be sure authService exposes GenerateToken. Let's just create a dummy object
+            // or see if we can use IAuthService. We might need a small helper. 
+            // For now we will call a specific generate method on Auth Service if it exists.
+            // Actually, we'll implement the token generator here directly referencing Configuration if needed, 
+            // but let's delegate to authService if we can.
+            
+            // Wait, to do it cleanly, let's inject IConfiguration and generate token here to avoid changing IAuthService signature inside replace block.
+            var tokenString = GenerateJwtToken(targetUser, HttpContext.RequestServices.GetRequiredService<IConfiguration>());
+
+            // Set cookie for automatic login
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true, // Should be true in prod HTTPS
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddDays(7)
+            };
+            Response.Cookies.Append("locale_token", tokenString, cookieOptions);
+
+            return Ok(new AuthResponse
+            {
+                Token = tokenString,
+                UserId = targetUser.Id,
+                Name = targetUser.Name,
+                Email = targetUser.Email,
+                Role = targetUser.Role.ToString()
+            });
+        }
+
+        private string GenerateJwtToken(LocaLe.EscrowApi.Models.User user, IConfiguration config)
+        {
+            var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+            var key = System.Text.Encoding.UTF8.GetBytes(config["Jwt:Key"] ?? "LocaLe_SuperSecretKey_ChangeThisInProduction_2026!");
+            var tokenDescriptor = new Microsoft.IdentityModel.Tokens.SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.Name, user.Name),
+                    new Claim(ClaimTypes.Email, user.Email),
+                    new Claim(ClaimTypes.Role, user.Role.ToString())
+                }),
+                Expires = DateTime.UtcNow.AddDays(7),
+                Issuer = config["Jwt:Issuer"] ?? "LocaLe",
+                Audience = config["Jwt:Audience"] ?? "LocaLe.Users",
+                SigningCredentials = new Microsoft.IdentityModel.Tokens.SigningCredentials(new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key), Microsoft.IdentityModel.Tokens.SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
         }
 
         /// <summary>
@@ -293,6 +382,30 @@ namespace LocaLe.EscrowApi.Controllers
             
             serviceRepo.Update(service);
             await serviceRepo.SaveChangesAsync();
+            return NoContent();
+        }
+
+        // ─── Phase 11: Flagged Messages ──────────────────────
+
+        /// <summary>
+        /// Get all flagged messages (potential anti-disintermediation violations).
+        /// </summary>
+        [HttpGet("flags")]
+        [ProducesResponseType(typeof(List<AdminFlaggedMessageResponse>), 200)]
+        public async Task<IActionResult> GetFlaggedMessages()
+        {
+            var flags = await _adminService.GetFlaggedMessagesAsync();
+            return Ok(flags);
+        }
+
+        /// <summary>
+        /// Mark a flagged message as resolved.
+        /// </summary>
+        [HttpPost("flags/{flagId}/resolve")]
+        public async Task<IActionResult> ResolveFlaggedMessage(Guid flagId, [FromBody] ResolveFlagRequest req)
+        {
+            var actorId = GetCurrentUserId();
+            await _adminService.ResolveFlaggedMessageAsync(flagId, req.AdminNote, actorId);
             return NoContent();
         }
 

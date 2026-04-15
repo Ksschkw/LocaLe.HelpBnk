@@ -30,5 +30,9 @@ namespace LocaLe.EscrowApi.Interfaces
 
         /// <summary>Resolve a dispute.</summary>
         Task ResolveDisputeAsync(Guid disputeId, string resolution, Guid actorId);
+
+        // ─── Anti-Leakage Flagged Messages ────────────────
+        Task<List<AdminFlaggedMessageResponse>> GetFlaggedMessagesAsync();
+        Task ResolveFlaggedMessageAsync(Guid flagId, string? adminNote, Guid actorId);
     }
 }

@@ -173,7 +173,8 @@ namespace LocaLe.EscrowApi.Models
         DisputeRaised,
         DisputeResolved,
         WaitlistAgreed,
-        DirectJobRequest
+        DirectJobRequest,
+        SystemAlert
     }
 
     public class Notification

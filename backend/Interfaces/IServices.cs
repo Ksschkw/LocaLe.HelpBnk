@@ -24,7 +24,7 @@ namespace LocaLe.EscrowApi.Interfaces
 
     public interface IBookingService
     {
-        Task<BookingResponse> ApplyToJobAsync(Guid jobId, Guid providerId);
+        Task<BookingResponse> ApplyToJobAsync(Guid jobId, Guid providerId, string? pitchNote = null);
         Task<BookingResponse> AcceptJobAsync(Guid jobId, Guid providerId);
         Task<BookingResponse> ConfirmBookingAsync(Guid bookingId, Guid buyerId, decimal initialDepositPercent = 1.0m);
         Task<BookingResponse> UpdateBookingStatusAsync(Guid bookingId, Guid userId, string newStatus);

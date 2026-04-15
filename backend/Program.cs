@@ -58,6 +58,7 @@ builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IVouchService, VouchService>();
 builder.Services.AddScoped<IWaitlistService, WaitlistService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddSignalR();
 
 // ═══════════════════════════════════════════════════════════
 // Response Compression — Brotli first, then Gzip fallback
@@ -235,6 +236,7 @@ app.UseAuthorization();
 app.UseCors("AllowAll");
 app.UseMiddleware<LocaLe.EscrowApi.Middleware.IdempotencyMiddleware>();
 app.MapControllers();
+app.MapHub<LocaLe.EscrowApi.Hubs.NotificationHub>("/hubs/notifications");
 app.MapFallbackToFile("index.html");
 
 app.Run();

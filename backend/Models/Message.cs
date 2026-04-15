@@ -16,6 +16,16 @@ namespace LocaLe.EscrowApi.Models
         [JsonIgnore]
         public Job? Job { get; set; }
 
+        /// <summary>
+        /// For pre-hire Interview Rooms: links the message to a specific Booking/Applicant thread.
+        /// When set, this message belongs to a private applicant chat, not the shared contract room.
+        /// </summary>
+        public Guid? BookingId { get; set; }
+
+        [ForeignKey("BookingId")]
+        [JsonIgnore]
+        public Booking? Booking { get; set; }
+
         [Required]
         public Guid SenderId { get; set; }
 
@@ -56,6 +66,12 @@ namespace LocaLe.EscrowApi.Models
         public bool IsEncrypted { get; set; } = false;
 
         public bool IsDeleted { get; set; } = false;
+
+        /// <summary>
+        /// True for platform-injected system warnings (e.g. anti-disintermediation alerts).
+        /// These are rendered differently in the UI and are never editable or deletable.
+        /// </summary>
+        public bool IsSystemMessage { get; set; } = false;
 
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
 

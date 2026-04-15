@@ -50,7 +50,19 @@ namespace LocaLe.EscrowApi.Models
         [MaxLength(100)]
         public string? AreaName { get; set; }
 
+        [MaxLength(100)]
+        public string? Country { get; set; }
+        [MaxLength(100)]
+        public string? State { get; set; }
+        [MaxLength(100)]
+        public string? City { get; set; }
+        [MaxLength(300)]
+        public string? StreetAddress { get; set; }
+
         public bool IsRemote { get; set; } = false;
+
+        [MaxLength(2000)]
+        public string? PortfolioImageUrl { get; set; }
 
 
         public int RequiredVouchPoints { get; set; } = 15; // Threshold to enable

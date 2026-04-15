@@ -2,6 +2,8 @@ using LocaLe.EscrowApi.DTOs;
 using LocaLe.EscrowApi.Interfaces;
 using LocaLe.EscrowApi.Interfaces.Repositories;
 using LocaLe.EscrowApi.Models;
+using LocaLe.EscrowApi.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace LocaLe.EscrowApi.Services
 {
@@ -11,22 +13,24 @@ namespace LocaLe.EscrowApi.Services
         private readonly IJobRepository _jobRepo;
         private readonly IDisputeRepository _disputeRepo;
         private readonly IAuditLogRepository _auditRepo;
+        private readonly IWalletRepository _walletRepo;
+        private readonly EscrowContext _context;
 
         public AdminService(
             IUserRepository userRepo,
             IJobRepository jobRepo,
             IDisputeRepository disputeRepo,
             IAuditLogRepository auditRepo,
-            IWalletRepository walletRepo)
+            IWalletRepository walletRepo,
+            EscrowContext context)
         {
             _userRepo = userRepo;
             _jobRepo = jobRepo;
             _disputeRepo = disputeRepo;
             _auditRepo = auditRepo;
             _walletRepo = walletRepo;
+            _context = context;
         }
-
-        private readonly IWalletRepository _walletRepo;
 
         public async Task<PagedResult<AdminUserResponse>> GetUsersAsync(int page, int pageSize)
         {
@@ -242,6 +246,54 @@ namespace LocaLe.EscrowApi.Services
                 TotalVouchPoints = user.TotalVouchPoints,
                 CreatedAt = user.CreatedAt
             };
+        }
+
+        public async Task<List<AdminFlaggedMessageResponse>> GetFlaggedMessagesAsync()
+        {
+            var flags = await _context.FlaggedMessages
+                .OrderBy(f => f.IsResolved)
+                .ThenByDescending(f => f.OccurredAt)
+                .ToListAsync();
+
+            return flags.Select(f => new AdminFlaggedMessageResponse
+            {
+                Id = f.Id,
+                OffenderId = f.OffenderId,
+                OffenderName = f.OffenderName,
+                JobId = f.JobId,
+                BookingId = f.BookingId,
+                BlockedContent = f.BlockedContent,
+                ViolationType = f.ViolationType,
+                OccurredAt = f.OccurredAt,
+                IsResolved = f.IsResolved,
+                AdminNote = f.AdminNote,
+                ResolvedAt = f.ResolvedAt
+            }).ToList();
+        }
+
+        public async Task ResolveFlaggedMessageAsync(Guid flagId, string? adminNote, Guid actorId)
+        {
+            var flag = await _context.FlaggedMessages.FindAsync(flagId)
+                ?? throw new KeyNotFoundException($"Flagged message {flagId} not found.");
+
+            if (flag.IsResolved)
+                throw new InvalidOperationException("Flag is already resolved.");
+
+            flag.IsResolved = true;
+            flag.AdminNote = adminNote;
+            flag.ResolvedAt = DateTime.UtcNow;
+
+            await _auditRepo.AddAsync(new AuditLog
+            {
+                ReferenceType = "FlaggedMessage",
+                ReferenceId = flagId,
+                Action = "FlaggedMessageResolved",
+                ActorId = actorId,
+                Details = $"Admin resolved flag {flagId}. Note: {adminNote}"
+            });
+
+            await _context.SaveChangesAsync();
+            await _auditRepo.SaveChangesAsync();
         }
     }
 }

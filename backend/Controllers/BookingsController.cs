@@ -25,12 +25,12 @@ namespace LocaLe.EscrowApi.Controllers
         [HttpPost("apply/{jobId}")]
         [ProducesResponseType(typeof(BookingResponse), 201)]
         [ProducesResponseType(400)]
-        public async Task<IActionResult> ApplyToJob(Guid jobId)
+        public async Task<IActionResult> ApplyToJob(Guid jobId, [FromBody] ApplyToJobRequest request)
         {
             var providerId = GetCurrentUserId();
             try
             {
-                var booking = await _bookingService.ApplyToJobAsync(jobId, providerId);
+                var booking = await _bookingService.ApplyToJobAsync(jobId, providerId, request.PitchNote);
                 return Created($"/api/bookings/{booking.Id}", booking);
             }
             catch (InvalidOperationException ex)

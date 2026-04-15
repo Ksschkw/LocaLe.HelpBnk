@@ -24,6 +24,7 @@ namespace LocaLe.EscrowApi.Services
             while (!stoppingToken.IsCancellationRequested)
             {
                 await CheckForStuckEscrowsAsync(stoppingToken);
+                await CheckForStuckDisputesAsync(stoppingToken); // Phase 12 escalation
                 await Task.Delay(_checkInterval, stoppingToken);
             }
         }
@@ -72,6 +73,48 @@ namespace LocaLe.EscrowApi.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while checking for stuck escrows.");
+            }
+        }
+
+        private async Task CheckForStuckDisputesAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<EscrowContext>();
+
+                // 48 hours for dispute escalation
+                var escalateThreshold = DateTime.UtcNow.Subtract(TimeSpan.FromHours(48));
+
+                var stuckDisputes = await dbContext.Disputes
+                    .Where(d => d.ResolutionStage == "Open" && d.CreatedAt <= escalateThreshold)
+                    .ToListAsync(cancellationToken);
+
+                foreach (var dispute in stuckDisputes)
+                {
+                    // Escalate to admin
+                    dispute.ResolutionStage = "UnderReview";
+                    
+                    var alertLog = new AuditLog
+                    {
+                        JobId = dispute.JobId,
+                        ReferenceType = "Dispute",
+                        ReferenceId = dispute.Id,
+                        Action = "DISPUTE_ESCALATED",
+                        ActorId = Guid.Empty, // System
+                        Details = $"Dispute {dispute.Id} unresolved for 48 hours. Auto-escalated to SuperAdmin.",
+                        Timestamp = DateTime.UtcNow
+                    };
+
+                    dbContext.AuditLogs.Add(alertLog);
+                    _logger.LogWarning($"DISPUTE ESCALATED: {dispute.Id}");
+                }
+
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while checking for stuck disputes.");
             }
         }
     }

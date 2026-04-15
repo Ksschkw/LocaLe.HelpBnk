@@ -53,6 +53,15 @@ namespace LocaLe.EscrowApi.DTOs
 
         [MaxLength(100)]
         public string? CategoryName { get; set; }
+
+        // ─── Location (required for in-person jobs, optional for remote) ───
+        public bool IsRemote { get; set; } = false;
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
+        [MaxLength(100)] public string? Country { get; set; }
+        [MaxLength(100)] public string? State { get; set; }
+        [MaxLength(100)] public string? City { get; set; }
+        [MaxLength(300)] public string? StreetAddress { get; set; }
     }
 
     public class UpdateJobRequest
@@ -65,6 +74,14 @@ namespace LocaLe.EscrowApi.DTOs
 
         public decimal? Amount { get; set; }
         public string? Status { get; set; }
+
+        public bool? IsRemote { get; set; }
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
+        [MaxLength(100)] public string? Country { get; set; }
+        [MaxLength(100)] public string? State { get; set; }
+        [MaxLength(100)] public string? City { get; set; }
+        [MaxLength(300)] public string? StreetAddress { get; set; }
     }
 
     public class JobResponse
@@ -89,13 +106,46 @@ namespace LocaLe.EscrowApi.DTOs
         public int ApplicationCount { get; set; }
         /// <summary>Optional category tag (e.g., Plumbing, Delivery).</summary>
         public string? CategoryName { get; set; }
+
+        // ─── Location ───
+        public bool IsRemote { get; set; }
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
+        public string? Country { get; set; }
+        public string? State { get; set; }
+        public string? City { get; set; }
+        public string? StreetAddress { get; set; }
+    }
+
+    // ─── Location Filter DTO (used in Discover / Jobs feed) ─────
+    public class LocationFilterRequest
+    {
+        /// <summary>User's current latitude (from browser geolocation).</summary>
+        public decimal? UserLat { get; set; }
+        /// <summary>User's current longitude.</summary>
+        public decimal? UserLon { get; set; }
+        /// <summary>Radius in km. null = no radius filter.</summary>
+        public double? RadiusKm { get; set; }
+        /// <summary>Filter by exact country string (e.g. "Nigeria").</summary>
+        public string? Country { get; set; }
+        /// <summary>Filter by exact state/province string.</summary>
+        public string? State { get; set; }
+        /// <summary>Filter by city/LGA string.</summary>
+        public string? City { get; set; }
+        /// <summary>Show only remote jobs/services.</summary>
+        public bool? RemoteOnly { get; set; }
+        /// <summary>Show everything globally (ignore all location filters).</summary>
+        public bool Global { get; set; } = false;
     }
 
     // ─── Booking DTOs ────────────────────────────────────────
     public class ApplyToJobRequest
     {
-        // No body needed; the provider is identified from the JWT,
-        // and the job ID comes from the route.
+        /// <summary>
+        /// Optional cover letter or pitch note from the provider.
+        /// </summary>
+        [MaxLength(2000)]
+        public string? PitchNote { get; set; }
     }
 
     public class ConfirmBookingRequest
@@ -119,6 +169,8 @@ namespace LocaLe.EscrowApi.DTOs
         /// <summary>Whether escrow funds have been locked for this booking.</summary>
         public bool EscrowSecured { get; set; }
         public Guid? EscrowId { get; set; }
+        public string? PitchNote { get; set; }
+        public bool IsPreHire { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 
@@ -304,5 +356,26 @@ namespace LocaLe.EscrowApi.DTOs
     public class AgreeWaitlistTermsRequest
     {
         public decimal InitialDepositPercent { get; set; }
+    }
+
+    // ─── Phase 11: Admin Flagged Messages ────────────────
+    public class AdminFlaggedMessageResponse
+    {
+        public Guid Id { get; set; }
+        public Guid OffenderId { get; set; }
+        public string OffenderName { get; set; } = string.Empty;
+        public Guid? JobId { get; set; }
+        public Guid? BookingId { get; set; }
+        public string BlockedContent { get; set; } = string.Empty;
+        public string ViolationType { get; set; } = string.Empty;
+        public DateTime OccurredAt { get; set; }
+        public bool IsResolved { get; set; }
+        public string? AdminNote { get; set; }
+        public DateTime? ResolvedAt { get; set; }
+    }
+
+    public class ResolveFlagRequest
+    {
+        public string? AdminNote { get; set; }
     }
 }

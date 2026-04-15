@@ -12,22 +12,25 @@ namespace LocaLe.EscrowApi.Services
         private readonly IUserRepository _userRepo;
         private readonly IAuditLogRepository _auditRepo;
         private readonly IEscrowService _escrowService;
+        private readonly INotificationService _notification;
 
         public BookingService(
             IBookingRepository bookingRepo,
             IJobRepository jobRepo,
             IUserRepository userRepo,
             IAuditLogRepository auditRepo,
-            IEscrowService escrowService)
+            IEscrowService escrowService,
+            INotificationService notification)
         {
             _bookingRepo = bookingRepo;
             _jobRepo = jobRepo;
             _userRepo = userRepo;
             _auditRepo = auditRepo;
             _escrowService = escrowService;
+            _notification = notification;
         }
 
-        public async Task<BookingResponse> ApplyToJobAsync(Guid jobId, Guid providerId)
+        public async Task<BookingResponse> ApplyToJobAsync(Guid jobId, Guid providerId, string? pitchNote = null)
         {
             var job = await _jobRepo.GetByIdAsync(jobId)
                 ?? throw new InvalidOperationException("Job not found.");
@@ -49,7 +52,9 @@ namespace LocaLe.EscrowApi.Services
             {
                 JobId = jobId,
                 ProviderId = providerId,
-                Status = BookingStatus.Pending
+                Status = BookingStatus.Pending,
+                PitchNote = pitchNote,
+                IsPreHire = true
             };
 
             await _bookingRepo.AddAsync(booking);
@@ -65,6 +70,15 @@ namespace LocaLe.EscrowApi.Services
             });
             await _auditRepo.SaveChangesAsync();
 
+            await _notification.CreateAsync(
+                userId: job.CreatorId,
+                type: NotificationType.SystemAlert,
+                title: "New Application",
+                body: $"{provider.Name} applied for your job '{job.Title}'.",
+                referenceId: booking.Id,
+                referenceType: "Booking"
+            );
+
             return new BookingResponse
             {
                 Id = booking.Id,
@@ -73,6 +87,8 @@ namespace LocaLe.EscrowApi.Services
                 ProviderId = booking.ProviderId,
                 ProviderName = provider.Name,
                 Status = booking.Status.ToString(),
+                PitchNote = booking.PitchNote,
+                IsPreHire = booking.IsPreHire,
                 CreatedAt = booking.CreatedAt
             };
         }
@@ -101,7 +117,8 @@ namespace LocaLe.EscrowApi.Services
             {
                 JobId = jobId,
                 ProviderId = providerId,
-                Status = BookingStatus.Active // Skip Pending — this is a direct accept
+                Status = BookingStatus.Active, // Skip Pending — this is a direct accept
+                IsPreHire = false // Escrow is locked immediately, skip interview mode
             };
 
             await _bookingRepo.AddAsync(booking);
@@ -126,6 +143,24 @@ namespace LocaLe.EscrowApi.Services
             });
             await _auditRepo.SaveChangesAsync();
 
+            await _notification.CreateAsync(
+                userId: providerId,
+                type: NotificationType.SystemAlert,
+                title: "Job Accepted",
+                body: $"You successfully accepted '{job.Title}' and escrow has been secured.",
+                referenceId: booking.Id,
+                referenceType: "Booking"
+            );
+            
+            await _notification.CreateAsync(
+                userId: job.CreatorId,
+                type: NotificationType.SystemAlert,
+                title: "Provider Hired",
+                body: $"{provider.Name} accepted your job '{job.Title}'. The vault is locked.",
+                referenceId: booking.Id,
+                referenceType: "Booking"
+            );
+
             return new BookingResponse
             {
                 Id = booking.Id,
@@ -134,6 +169,7 @@ namespace LocaLe.EscrowApi.Services
                 ProviderId = booking.ProviderId,
                 ProviderName = provider.Name,
                 Status = booking.Status.ToString(),
+                IsPreHire = booking.IsPreHire,
                 CreatedAt = booking.CreatedAt
             };
         }
@@ -154,6 +190,7 @@ namespace LocaLe.EscrowApi.Services
 
             // Stage changes in memory but do NOT save yet — save only after escrow succeeds
             booking.Status = BookingStatus.Active;
+            booking.IsPreHire = false; // Move out of pre-hire phase
             booking.Job.Status = JobStatus.Assigned;
 
             _bookingRepo.Update(booking);
@@ -168,6 +205,7 @@ namespace LocaLe.EscrowApi.Services
             {
                 // Rollback in-memory changes so no corrupt state is persisted
                 booking.Status = BookingStatus.Pending;
+                booking.IsPreHire = true;
                 booking.Job.Status = JobStatus.Open;
                 _bookingRepo.Update(booking);
                 _jobRepo.Update(booking.Job);
@@ -190,6 +228,15 @@ namespace LocaLe.EscrowApi.Services
             });
             await _auditRepo.SaveChangesAsync();
 
+            await _notification.CreateAsync(
+                userId: booking.ProviderId,
+                type: NotificationType.SystemAlert,
+                title: "You've been hired!",
+                body: $"The buyer has locked funds into Escrow for '{booking.Job.Title}'. You can start working!",
+                referenceId: booking.Id,
+                referenceType: "Booking"
+            );
+
             return new BookingResponse
             {
                 Id = booking.Id,
@@ -198,6 +245,7 @@ namespace LocaLe.EscrowApi.Services
                 ProviderId = booking.ProviderId,
                 ProviderName = booking.Provider?.Name ?? "Unknown",
                 Status = booking.Status.ToString(),
+                IsPreHire = booking.IsPreHire,
                 CreatedAt = booking.CreatedAt
             };
         }

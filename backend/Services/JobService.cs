@@ -14,8 +14,9 @@ namespace LocaLe.EscrowApi.Services
         private readonly IWalletRepository _walletRepo;
         private readonly IBookingRepository _bookingRepo;
         private readonly IEscrowRepository _escrowRepo;
+        private readonly INotificationService _notification;
 
-        public JobService(IJobRepository jobRepo, IUserRepository userRepo, IAuditLogRepository auditRepo, IServiceRepository serviceRepo, IWalletRepository walletRepo, IBookingRepository bookingRepo, IEscrowRepository escrowRepo)
+        public JobService(IJobRepository jobRepo, IUserRepository userRepo, IAuditLogRepository auditRepo, IServiceRepository serviceRepo, IWalletRepository walletRepo, IBookingRepository bookingRepo, IEscrowRepository escrowRepo, INotificationService notification)
         {
             _jobRepo = jobRepo;
             _userRepo = userRepo;
@@ -24,6 +25,7 @@ namespace LocaLe.EscrowApi.Services
             _walletRepo = walletRepo;
             _bookingRepo = bookingRepo;
             _escrowRepo = escrowRepo;
+            _notification = notification;
         }
 
         public async Task<JobResponse> CreateJobAsync(Guid creatorId, CreateJobRequest request)
@@ -242,6 +244,15 @@ namespace LocaLe.EscrowApi.Services
                         ActorId = creatorId,
                         Details = "Job successfully closed by buyer after vault release."
                     });
+
+                    await _notification.CreateAsync(
+                        userId: escrow.ProviderId,
+                        type: NotificationType.SystemAlert,
+                        title: "Job Completed!",
+                        body: $"The buyer has finalized '{job.Title}'. Your Jobs Done metric has increased!",
+                        referenceId: job.Id,
+                        referenceType: "Job"
+                    );
                 }
             }
 

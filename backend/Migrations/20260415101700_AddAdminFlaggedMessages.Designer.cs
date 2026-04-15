@@ -3,6 +3,7 @@ using System;
 using LocaLe.EscrowApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LocaLe.EscrowApi.Migrations
 {
     [DbContext(typeof(EscrowContext))]
-    partial class EscrowContextModelSnapshot : ModelSnapshot
+    [Migration("20260415101700_AddAdminFlaggedMessages")]
+    partial class AddAdminFlaggedMessages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -535,10 +538,6 @@ namespace LocaLe.EscrowApi.Migrations
 
                     b.Property<decimal?>("Longitude")
                         .HasColumnType("decimal(18,6)");
-
-                    b.Property<string>("PortfolioImageUrl")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
 
                     b.Property<Guid>("ProviderId")
                         .HasColumnType("uuid");

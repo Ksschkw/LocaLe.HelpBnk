@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using LocaLe.EscrowApi.Data;
 using LocaLe.EscrowApi.Interfaces;
 using LocaLe.EscrowApi.Models;
@@ -33,6 +34,7 @@ namespace LocaLe.EscrowApi.Controllers
             public bool IsEncrypted { get; set; }
             public bool IsPinned { get; set; }
             public bool IsDeleted { get; set; }
+            public bool IsSystemMessage { get; set; }
             public Guid? ParentMessageId { get; set; }
             public string? ParentContentPreview { get; set; }
             public string? ParentSenderName { get; set; }
@@ -48,6 +50,28 @@ namespace LocaLe.EscrowApi.Controllers
             public bool IsEncrypted { get; set; } = false;
         }
 
+        // ─── Anti-Disintermediation Patterns ─────────────────────────────────
+        // Any message matching these patterns will be blocked before persistence.
+        private static readonly (Regex Pattern, string Label)[] LeakPatterns =
+        [
+            (new Regex(@"\b0?[789]\d{9}\b",            RegexOptions.IgnoreCase), "phone number"),
+            (new Regex(@"\b[\w.+-]+@[\w-]+\.[\w.]+\b", RegexOptions.IgnoreCase), "email address"),
+            (new Regex(@"\bwhatsapp\b",                 RegexOptions.IgnoreCase), "WhatsApp reference"),
+            (new Regex(@"\btelegram\b",                 RegexOptions.IgnoreCase), "Telegram reference"),
+            (new Regex(@"\bcash\s*(pay|transfer|app)?\b", RegexOptions.IgnoreCase), "cash payment keyword"),
+            (new Regex(@"\bbank\s*transfer\b",           RegexOptions.IgnoreCase), "bank transfer keyword"),
+            (new Regex(@"\bpay\s*(me|you)\s*(outside|directly|privately)\b", RegexOptions.IgnoreCase), "off-platform payment"),
+            (new Regex(@"\bopay\b|\bpalm\s*pay\b|\bkuda\b", RegexOptions.IgnoreCase), "third-party fintech app"),
+        ];
+
+        private static string? DetectLeakage(string content)
+        {
+            foreach (var (pattern, label) in LeakPatterns)
+                if (pattern.IsMatch(content)) return label;
+            return null;
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         private static ChatMessageResponse MapResponse(Message m) => new()
         {
             Id = m.Id,
@@ -58,6 +82,7 @@ namespace LocaLe.EscrowApi.Controllers
             IsEncrypted = m.IsEncrypted,
             IsPinned = m.IsPinned,
             IsDeleted = m.IsDeleted,
+            IsSystemMessage = m.IsSystemMessage,
             ParentMessageId = m.ParentMessageId,
             ParentContentPreview = m.ParentContentPreview,
             ParentSenderName = m.ParentSenderName,
@@ -77,12 +102,12 @@ namespace LocaLe.EscrowApi.Controllers
 
             // Mark unread as read for this user
             await _context.Messages
-                .Where(m => m.JobId == jobId && m.SenderId != userId && !m.IsRead)
+                .Where(m => m.JobId == jobId && m.BookingId == null && m.SenderId != userId && !m.IsRead)
                 .ExecuteUpdateAsync(s => s.SetProperty(m => m.IsRead, true));
 
             var messages = await _context.Messages
                 .Include(m => m.Sender)
-                .Where(m => m.JobId == jobId)
+                .Where(m => m.JobId == jobId && m.BookingId == null)
                 .OrderBy(m => m.IsPinned ? 0 : 1)
                 .ThenBy(m => m.SentAt)
                 .Select(m => MapResponse(m))
@@ -100,7 +125,7 @@ namespace LocaLe.EscrowApi.Controllers
 
             var pinned = await _context.Messages
                 .Include(m => m.Sender)
-                .Where(m => m.JobId == jobId && m.IsPinned && !m.IsDeleted)
+                .Where(m => m.JobId == jobId && m.BookingId == null && m.IsPinned && !m.IsDeleted)
                 .OrderBy(m => m.SentAt)
                 .Select(m => MapResponse(m))
                 .ToListAsync();
@@ -118,6 +143,45 @@ namespace LocaLe.EscrowApi.Controllers
             if (string.IsNullOrWhiteSpace(request.Content))
                 return BadRequest(new { Error = "Message content cannot be empty." });
 
+            // ─ Anti-disintermediation gate ─
+            var leakLabel = DetectLeakage(request.Content);
+            if (leakLabel != null)
+            {
+                var violatorId = GetCurrentUserId();
+                var violator = await _context.Users.FindAsync(violatorId);
+
+                // 1. Persist a FlaggedMessage for admin review
+                _context.FlaggedMessages.Add(new FlaggedMessage
+                {
+                    OffenderId = violatorId,
+                    OffenderName = violator?.Name ?? "Unknown",
+                    JobId = jobId,
+                    BlockedContent = request.Content,
+                    ViolationType = leakLabel
+                });
+
+                // 2. Inject system warning into the chat so BOTH parties see it
+                _context.Messages.Add(new Message
+                {
+                    JobId = jobId,
+                    BookingId = null,
+                    SenderId = violatorId,
+                    Content = $"⚠️ PLATFORM WARNING: {violator?.Name ?? "A user"} attempted to share a {leakLabel}. " +
+                              "Transacting outside LocaLe voids all Escrow protection and may result in a permanent ban. " +
+                              "This incident has been reported to LocaLe admins.",
+                    IsSystemMessage = true,
+                    IsRead = false
+                });
+
+                await _context.SaveChangesAsync();
+
+                return BadRequest(new
+                {
+                    Error = $"⚠️ Message blocked: contains a {leakLabel}. Sharing personal contact or payment details violates LocaLe’s terms and voids all Escrow protection.",
+                    IsLeakageViolation = true
+                });
+            }
+
             var userId = GetCurrentUserId();
             if (!await IsUserAuthorizedForJobChat(jobId, userId)) return Forbid();
 
@@ -128,7 +192,7 @@ namespace LocaLe.EscrowApi.Controllers
             {
                 var parent = await _context.Messages
                     .Include(m => m.Sender)
-                    .FirstOrDefaultAsync(m => m.Id == request.ParentMessageId && m.JobId == jobId);
+                    .FirstOrDefaultAsync(m => m.Id == request.ParentMessageId && m.JobId == jobId && m.BookingId == null);
                 if (parent != null)
                 {
                     parentPreview = parent.IsDeleted
@@ -142,6 +206,7 @@ namespace LocaLe.EscrowApi.Controllers
             var message = new Message
             {
                 JobId = jobId,
+                BookingId = null,
                 SenderId = userId,
                 Content = request.Content,
                 IsEncrypted = request.IsEncrypted,
@@ -206,7 +271,7 @@ namespace LocaLe.EscrowApi.Controllers
             var userId = GetCurrentUserId();
             if (!await IsUserAuthorizedForJobChat(jobId, userId)) return Forbid();
 
-            var msg = await _context.Messages.FirstOrDefaultAsync(m => m.Id == messageId && m.JobId == jobId);
+            var msg = await _context.Messages.FirstOrDefaultAsync(m => m.Id == messageId && m.JobId == jobId && m.BookingId == null);
             if (msg == null) return NotFound();
 
             msg.IsPinned = !msg.IsPinned;
@@ -220,7 +285,7 @@ namespace LocaLe.EscrowApi.Controllers
         public async Task<IActionResult> DeleteMessage(Guid jobId, Guid messageId)
         {
             var userId = GetCurrentUserId();
-            var msg = await _context.Messages.FirstOrDefaultAsync(m => m.Id == messageId && m.JobId == jobId);
+            var msg = await _context.Messages.FirstOrDefaultAsync(m => m.Id == messageId && m.JobId == jobId && m.BookingId == null);
             if (msg == null) return NotFound();
             if (msg.SenderId != userId) return Forbid();
 
@@ -229,6 +294,150 @@ namespace LocaLe.EscrowApi.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Message soft-deleted." });
+        }
+
+        /// <summary>
+        /// Get all messages for a Pre-Hire (Booking) room.
+        /// </summary>
+        [HttpGet("booking/{bookingId}")]
+        public async Task<IActionResult> GetBookingChat(Guid bookingId)
+        {
+            var userId = GetCurrentUserId();
+            var booking = await _context.Bookings.Include(b => b.Job).FirstOrDefaultAsync(b => b.Id == bookingId);
+            if (booking == null) return NotFound();
+
+            if (booking.ProviderId != userId && (booking.Job == null || booking.Job.CreatorId != userId))
+                return Forbid();
+
+            // Mark unread as read for this user
+            await _context.Messages
+                .Where(m => m.BookingId == bookingId && m.SenderId != userId && !m.IsRead)
+                .ExecuteUpdateAsync(s => s.SetProperty(m => m.IsRead, true));
+
+            var messages = await _context.Messages
+                .Include(m => m.Sender)
+                .Where(m => m.BookingId == bookingId)
+                .OrderBy(m => m.SentAt)
+                .Select(m => MapResponse(m))
+                .ToListAsync();
+
+            return Ok(messages);
+        }
+
+        /// <summary>
+        /// Post a message to a Pre-Hire (Booking) room.
+        /// </summary>
+        [HttpPost("booking/{bookingId}")]
+        public async Task<IActionResult> SendBookingMessage(Guid bookingId, [FromBody] SendMessageRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Content))
+                return BadRequest(new { Error = "Message content cannot be empty." });
+
+            // ─ Anti-disintermediation gate ─
+            var leakLabel = DetectLeakage(request.Content);
+            if (leakLabel != null)
+            {
+                var violatorId = GetCurrentUserId();
+                var violator = await _context.Users.FindAsync(violatorId);
+
+                // 1. Persist a FlaggedMessage for admin review
+                _context.FlaggedMessages.Add(new FlaggedMessage
+                {
+                    OffenderId = violatorId,
+                    OffenderName = violator?.Name ?? "Unknown",
+                    BookingId = bookingId,
+                    BlockedContent = request.Content,
+                    ViolationType = leakLabel
+                });
+
+                // 2. Inject system warning into the interview room
+                _context.Messages.Add(new Message
+                {
+                    // Find the job from the booking to keep FK happy
+                    JobId = (await _context.Bookings.FindAsync(bookingId))?.JobId ?? Guid.Empty,
+                    BookingId = bookingId,
+                    SenderId = violatorId,
+                    Content = $"⚠️ PLATFORM WARNING: {violator?.Name ?? "A user"} attempted to share a {leakLabel}. " +
+                              "Transacting outside LocaLe voids all Escrow protection and may result in a permanent ban. " +
+                              "This incident has been reported to LocaLe admins.",
+                    IsSystemMessage = true,
+                    IsRead = false
+                });
+
+                await _context.SaveChangesAsync();
+
+                return BadRequest(new
+                {
+                    Error = $"⚠️ Message blocked: contains a {leakLabel}. Sharing personal contact or payment details violates LocaLe's terms and voids all Escrow protection.",
+                    IsLeakageViolation = true
+                });
+            }
+
+            var userId = GetCurrentUserId();
+            var booking = await _context.Bookings.Include(b => b.Job).FirstOrDefaultAsync(b => b.Id == bookingId);
+            if (booking == null) return NotFound();
+
+            if (booking.ProviderId != userId && (booking.Job == null || booking.Job.CreatorId != userId))
+                return Forbid();
+
+            string? parentPreview = null;
+            string? parentSenderName = null;
+
+            if (request.ParentMessageId.HasValue)
+            {
+                var parent = await _context.Messages
+                    .Include(m => m.Sender)
+                    .FirstOrDefaultAsync(m => m.Id == request.ParentMessageId && m.BookingId == bookingId);
+                if (parent != null)
+                {
+                    parentPreview = parent.IsDeleted
+                        ? "[Message Deleted]"
+                        : (parent.Content.Length > 100 ? parent.Content[..100] + "..." : parent.Content);
+                    parentSenderName = parent.Sender?.Name;
+                }
+            }
+
+            var sender = await _context.Users.FindAsync(userId);
+            var message = new Message
+            {
+                JobId = booking.JobId,
+                BookingId = bookingId,
+                SenderId = userId,
+                Content = request.Content,
+                IsEncrypted = request.IsEncrypted,
+                ParentMessageId = request.ParentMessageId,
+                ParentContentPreview = parentPreview,
+                ParentSenderName = parentSenderName
+            };
+
+            _context.Messages.Add(message);
+            await _context.SaveChangesAsync();
+
+            // Notify the other party
+            var otherUserId = (booking.Job!.CreatorId == userId) ? booking.ProviderId : booking.Job.CreatorId;
+            await _notifications.CreateAsync(
+                otherUserId,
+                NotificationType.NewMessage,
+                $"New interview message from {sender?.Name ?? "Someone"}",
+                request.IsEncrypted ? "🔒 Encrypted message" : (request.Content.Length > 80 ? request.Content[..80] + "..." : request.Content),
+                bookingId, "Booking"
+            );
+
+            return Ok(new ChatMessageResponse
+            {
+                Id = message.Id,
+                JobId = message.JobId,
+                SenderId = message.SenderId,
+                SenderName = sender?.Name ?? "Me",
+                Content = message.Content,
+                IsEncrypted = message.IsEncrypted,
+                IsPinned = false,
+                IsDeleted = false,
+                ParentMessageId = message.ParentMessageId,
+                ParentContentPreview = parentPreview,
+                ParentSenderName = parentSenderName,
+                SentAt = message.SentAt
+            });
         }
 
         private async Task<bool> IsUserAuthorizedForJobChat(Guid jobId, Guid userId)

@@ -1,6 +1,8 @@
 using LocaLe.EscrowApi.Data;
+using LocaLe.EscrowApi.Hubs;
 using LocaLe.EscrowApi.Interfaces;
 using LocaLe.EscrowApi.Models;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace LocaLe.EscrowApi.Services
@@ -8,10 +10,12 @@ namespace LocaLe.EscrowApi.Services
     public class NotificationService : INotificationService
     {
         private readonly EscrowContext _context;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public NotificationService(EscrowContext context)
+        public NotificationService(EscrowContext context, IHubContext<NotificationHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         public async Task CreateAsync(Guid userId, NotificationType type, string title, string body,
@@ -28,6 +32,17 @@ namespace LocaLe.EscrowApi.Services
             };
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
+
+            // Broadcast to the user's specific WebSocket group (userId)
+            await _hubContext.Clients.Group(userId.ToString()).SendAsync("ReceiveNotification", new {
+                notification.Id,
+                notification.Title,
+                notification.Body,
+                notification.Type,
+                notification.ReferenceId,
+                notification.ReferenceType,
+                notification.CreatedAt
+            });
         }
 
         public async Task<List<Notification>> GetForUserAsync(Guid userId, int limit = 30)

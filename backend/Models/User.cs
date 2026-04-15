@@ -63,6 +63,15 @@ namespace LocaLe.EscrowApi.Models
         public decimal? Longitude { get; set; }
         [MaxLength(100)]
         public string? AreaName { get; set; }
+        
+        [MaxLength(100)]
+        public string? Country { get; set; }
+        [MaxLength(100)]
+        public string? State { get; set; }
+        [MaxLength(100)]
+        public string? City { get; set; }
+        [MaxLength(300)]
+        public string? StreetAddress { get; set; }
 
 
         /// <summary>

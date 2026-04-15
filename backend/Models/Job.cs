@@ -45,6 +45,27 @@ namespace LocaLe.EscrowApi.Models
         public Guid? ServiceId { get; set; }
         public Service? Service { get; set; }
 
+        // --- Geolocation & Filtering ---
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal? Latitude { get; set; }
+        
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal? Longitude { get; set; }
+
+        [MaxLength(100)]
+        public string? Country { get; set; }
+
+        [MaxLength(100)]
+        public string? State { get; set; }
+
+        [MaxLength(100)]
+        public string? City { get; set; }
+
+        [MaxLength(300)]
+        public string? StreetAddress { get; set; }
+
+        public bool IsRemote { get; set; } = false;
+
         /// <summary>
         /// Optional category tag for this job (e.g., Plumbing, Delivery).
         /// </summary>

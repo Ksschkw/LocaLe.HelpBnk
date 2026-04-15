@@ -24,6 +24,7 @@ namespace LocaLe.EscrowApi.Data
         public DbSet<Message> Messages => Set<Message>();
         public DbSet<Dispute> Disputes => Set<Dispute>();
         public DbSet<Notification> Notifications => Set<Notification>();
+        public DbSet<FlaggedMessage> FlaggedMessages => Set<FlaggedMessage>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -151,6 +152,12 @@ namespace LocaLe.EscrowApi.Data
                 entity.HasOne(m => m.ParentMessage)
                       .WithMany()
                       .HasForeignKey(m => m.ParentMessageId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                // Optional Booking FK for pre-hire interview rooms
+                entity.HasOne(m => m.Booking)
+                      .WithMany()
+                      .HasForeignKey(m => m.BookingId)
                       .OnDelete(DeleteBehavior.SetNull);
 
                 entity.HasIndex(m => m.IsPinned);

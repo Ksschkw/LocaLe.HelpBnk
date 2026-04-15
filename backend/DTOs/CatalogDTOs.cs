@@ -37,6 +37,7 @@ namespace LocaLe.EscrowApi.DTOs
         public decimal? Longitude { get; set; }
         public string? AreaName { get; set; }
         public bool IsRemote { get; set; }
+        public string? PortfolioImageUrl { get; set; }
     }
 
     public class CreateServiceRequest
@@ -50,6 +51,7 @@ namespace LocaLe.EscrowApi.DTOs
         public decimal? Longitude { get; set; }
         public string? AreaName { get; set; }
         public bool IsRemote { get; set; }
+        public string? PortfolioImageUrl { get; set; }
     }
 
     public class UpdateServiceRequest
@@ -63,5 +65,6 @@ namespace LocaLe.EscrowApi.DTOs
         public decimal? Longitude { get; set; }
         public string? AreaName { get; set; }
         public bool? IsRemote { get; set; }
+        public string? PortfolioImageUrl { get; set; }
     }
 }

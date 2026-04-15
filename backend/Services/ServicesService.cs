@@ -134,7 +134,8 @@ namespace LocaLe.EscrowApi.Services
                 Latitude = s.Latitude,
                 Longitude = s.Longitude,
                 AreaName = s.AreaName,
-                IsRemote = s.IsRemote
+                IsRemote = s.IsRemote,
+                PortfolioImageUrl = s.PortfolioImageUrl
             };
         }
 
@@ -157,6 +158,7 @@ namespace LocaLe.EscrowApi.Services
                 Longitude = request.Longitude,
                 AreaName = request.AreaName,
                 IsRemote = request.IsRemote,
+                PortfolioImageUrl = request.PortfolioImageUrl,
                 RequiredVouchPoints = 15,
                 IsDiscoveryEnabled = false,
                 CreatedAt = DateTime.UtcNow,
@@ -187,6 +189,7 @@ namespace LocaLe.EscrowApi.Services
             if (request.Longitude.HasValue) service.Longitude = request.Longitude;
             if (request.AreaName != null) service.AreaName = request.AreaName;
             if (request.IsRemote.HasValue) service.IsRemote = request.IsRemote.Value;
+            if (request.PortfolioImageUrl != null) service.PortfolioImageUrl = request.PortfolioImageUrl;
             
             service.UpdatedAt = DateTime.UtcNow;
 
@@ -257,7 +260,8 @@ namespace LocaLe.EscrowApi.Services
                 Latitude = s.Latitude,
                 Longitude = s.Longitude,
                 AreaName = s.AreaName,
-                IsRemote = s.IsRemote
+                IsRemote = s.IsRemote,
+                PortfolioImageUrl = s.PortfolioImageUrl
             }).ToList();
         }
     }

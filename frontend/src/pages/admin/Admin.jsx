@@ -92,6 +92,19 @@ export default function AdminPage() {
     } catch { toast('Removal failed', 'error') }
   }
 
+  const handleImpersonate = async (id) => {
+    const ok = await confirm({ title: 'Impersonate User', message: 'You will become this user for debugging. Continue?', danger: true })
+    if (!ok) return
+    try {
+      const res = await adminApi.impersonateUser(id)
+      toast('Impersonation successful, reloading as target user', 'success')
+      // Server sets cookie; reload to pick up new session
+      window.location.href = '/'
+    } catch (err) {
+      toast(err?.message || 'Impersonation failed', 'error')
+    }
+  }
+
   const handleResolveDispute = async (id) => {
     const resolution = await prompt({ title: 'Resolve Dispute', placeholder: 'Enter detailed resolution terms (Admin Notes):' })
     if (!resolution) return
@@ -189,7 +202,10 @@ export default function AdminPage() {
                   <div style={{ fontSize: '0.8rem', color: 'gray' }}>{u.email} | {u.tier} ({u.trustScore} TP)</div>
                 </div>
                 {isSuperAdmin && u.id !== user.userId && (
-                  <Button size="sm" variant="danger" onClick={() => handleDeleteUser(u.id)}>Delete</Button>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <Button size="sm" onClick={() => handleImpersonate(u.id)}>Impersonate</Button>
+                    <Button size="sm" variant="danger" onClick={() => handleDeleteUser(u.id)}>Delete</Button>
+                  </div>
                 )}
               </Card>
             ))}

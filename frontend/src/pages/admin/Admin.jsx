@@ -3,6 +3,7 @@ import { adminApi, seedApi } from '../../api'
 import { useAuth } from '../../contexts/AuthContext'
 import { useDialog } from '../../contexts/DialogContext'
 import { useToast, timeAgo, fmt } from '../../hooks/useUtils'
+import { useNavigate } from 'react-router-dom'
 import TopBar from '../../components/layout/TopBar'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -13,7 +14,7 @@ export default function AdminPage() {
   const toast = useToast()
   const { confirm, prompt } = useDialog()
   
-  const [tab, setTab] = useState('users') // users, disputes, metrics, payments
+  const [tab, setTab] = useState('users') // users, disputes, flags, metrics, payments
   const [data, setData] = useState([])
   const [extraData, setExtraData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -49,6 +50,9 @@ export default function AdminPage() {
         // Backend returns paged result
         const res = await adminApi.getUsers(1, 50) 
         setData(res.data?.items || [])
+      } else if (tab === 'flags') {
+        const res = await adminApi.getFlaggedMessages()
+        setData(res.data || [])
       } else if (tab === 'disputes') {
         const res = await adminApi.getDisputes()
         setData(res.data)
@@ -76,6 +80,7 @@ export default function AdminPage() {
   )
 
   const isSuperAdmin = user.role === 'SuperAdmin'
+  const navigate = useNavigate()
 
   const handleDeleteUser = async (id) => {
     const isOk = await confirm({ title: 'Delete User', message: 'NUKE THIS USER? Permanent action.', danger: true })
@@ -105,6 +110,31 @@ export default function AdminPage() {
     } catch { toast('Action blocked', 'error') }
   }
 
+  const handleResolveFlag = async (flag) => {
+    const note = await prompt({ title: 'Resolve Flag', placeholder: 'Enter admin note (optional)' })
+    try {
+      await adminApi.resolveFlaggedMessage(flag.id, note || null)
+      toast('Flag resolved', 'success')
+      load()
+    } catch { toast('Failed to resolve flag', 'error') }
+  }
+
+  const handleBanUser = async (userId) => {
+    const ok = await confirm({ title: 'Ban User', message: 'Silently ban / delete this user?', danger: true })
+    if (!ok) return
+    try {
+      await adminApi.deleteUser(userId)
+      toast('User removed', 'success')
+      load()
+    } catch { toast('Failed to remove user', 'error') }
+  }
+
+  const handleGotoChat = (flag) => {
+    if (flag.bookingId) return navigate(`/chat/booking/${flag.bookingId}`)
+    if (flag.jobId) return navigate(`/chat/${flag.jobId}`)
+    toast('No chat context available', 'error')
+  }
+
   const handleBroadcast = async () => {
     const msg = await prompt({ title: 'Global Broadcast', placeholder: 'Enter broadcast message' })
     if(!msg) return
@@ -131,6 +161,7 @@ export default function AdminPage() {
       <div className={styles.tabs} style={{ padding: '0 16px', overflowX: 'auto' }}>
         <button className={[styles.tab, tab === 'users' ? styles.active : ''].join(' ')} onClick={() => setTab('users')}>Users</button>
         <button className={[styles.tab, tab === 'disputes' ? styles.active : ''].join(' ')} onClick={() => setTab('disputes')}>Disputes</button>
+        <button className={[styles.tab, tab === 'flags' ? styles.active : ''].join(' ')} onClick={() => setTab('flags')}>Flags</button>
         <button className={[styles.tab, tab === 'payments' ? styles.active : ''].join(' ')} onClick={() => setTab('payments')}>Payments</button>
         <button className={[styles.tab, tab === 'metrics' ? styles.active : ''].join(' ')} onClick={() => setTab('metrics')}>Analytics</button>
       </div>
@@ -162,6 +193,22 @@ export default function AdminPage() {
                 )}
               </Card>
             ))}
+
+            {tab === 'flags' && (data.length === 0 ? <p>No Flagged Messages</p> : data.map(f => (
+              <Card key={f.id} className={styles.cardRow} style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between' }}>
+                <div>
+                  <strong>{f.offenderName}</strong>
+                  <div style={{ fontSize: '0.8rem', color: 'gray' }}>{f.violationType} • {timeAgo(f.occurredAt)}</div>
+                  <p style={{ margin: '8px 0', fontSize: '0.95rem' }}>{f.blockedContent}</p>
+                  {f.isResolved && <div style={{ fontSize: '0.8rem', color: 'green' }}>Resolved{f.resolvedAt ? ` • ${new Date(f.resolvedAt).toLocaleString()}` : ''}</div>}
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  {!f.isResolved && <Button size="sm" onClick={() => handleResolveFlag(f)}>Resolve</Button>}
+                  <Button size="sm" variant="danger" onClick={() => handleBanUser(f.offenderId)}>Remove</Button>
+                  <Button size="sm" variant="outline" onClick={() => handleGotoChat(f)}>Go to Chat</Button>
+                </div>
+              </Card>
+            )))}
 
             {tab === 'disputes' && (data.length === 0 ? <p>No Active Disputes</p> : data.map(d => (
               <Card key={d.id} className={styles.cardRow} style={{ marginBottom: 8 }}>

@@ -61,11 +61,16 @@ export const adminApi = {
   getPayments:     () => api.get('/Admin/payments'),
   refundPayment:   (id) => api.post(`/Admin/payments/${id}/refund`),
   toggleDiscovery: (id, enable) => api.put(`/Admin/services/${id}/discovery`, null, { params: { enable } }),
+  // Flagged messages (admin review)
+  getFlaggedMessages: () => api.get('/Admin/flags'),
+  resolveFlaggedMessage: (flagId, adminNote) => api.post(`/Admin/flags/${flagId}/resolve`, { AdminNote: adminNote }),
+  // SuperAdmin impersonation
+  impersonateUser: (userId) => api.post(`/Admin/impersonate/${userId}`),
 }
 
 // --- Bookings ---
 export const bookingsApi = {
-  apply:       (jobId) => api.post(`/Bookings/apply/${jobId}`),
+  apply:       (jobId, pitchNote) => api.post(`/Bookings/apply/${jobId}`, { pitchNote }),
   confirm:     (bookingId) => api.post(`/Bookings/${bookingId}/confirm`),
   mine:        () => api.get('/Bookings/mine'),
   setStatus:   (id, status) => api.put(`/Bookings/${id}/status`, status, { headers: { 'Content-Type': 'application/json' } }),
@@ -74,11 +79,13 @@ export const bookingsApi = {
 
 // --- Chats ---
 export const chatsApi = {
-  getMessages:    (jobId) => api.get(`/Chats/${jobId}`),
-  sendMessage:    (jobId, data) => api.post(`/Chats/${jobId}`, data),
-  getPinned:      (jobId) => api.get(`/Chats/${jobId}/pinned`),
-  togglePin:      (jobId, messageId) => api.post(`/Chats/${jobId}/messages/${messageId}/pin`),
-  deleteMessage:  (jobId, messageId) => api.delete(`/Chats/${jobId}/messages/${messageId}`),
+  getMessages:          (jobId) => api.get(`/Chats/${jobId}`),
+  sendMessage:          (jobId, data) => api.post(`/Chats/${jobId}`, data),
+  getBookingMessages:   (bookingId) => api.get(`/Chats/booking/${bookingId}`),
+  sendBookingMessage:   (bookingId, data) => api.post(`/Chats/booking/${bookingId}`, data),
+  getPinned:            (jobId) => api.get(`/Chats/${jobId}/pinned`),
+  togglePin:            (jobId, messageId) => api.post(`/Chats/${jobId}/messages/${messageId}/pin`),
+  deleteMessage:        (jobId, messageId) => api.delete(`/Chats/${jobId}/messages/${messageId}`),
 }
 
 // --- Disputes ---

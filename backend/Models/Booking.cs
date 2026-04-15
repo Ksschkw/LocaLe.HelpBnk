@@ -37,7 +37,7 @@ namespace LocaLe.EscrowApi.Models
 
         /// <summary>
         /// True while this booking is still in the "interview" phase.
-        /// Neither party can trigger escrow until the buyer clicks "Accept & Lock Vault".
+        /// Neither party can trigger escrow until the buyer clicks "Accept and Lock Vault".
         /// </summary>
         public bool IsPreHire { get; set; } = true;
 

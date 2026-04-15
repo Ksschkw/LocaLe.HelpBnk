@@ -154,7 +154,13 @@ namespace LocaLe.EscrowApi.Controllers
                     timeToRelease = (released.Value - secured.Value).TotalMinutes;
                 }
 
-                csvBuilder.AppendLine($"{group.Key},{created},{secured},{released},{timeToRelease}");
+                // Normalize nullable DateTime values to safe strings for CSV export
+                var createdStr = created.HasValue ? created.Value.ToString("o") : string.Empty;
+                var securedStr = secured.HasValue ? secured.Value.ToString("o") : string.Empty;
+                var releasedStr = released.HasValue ? released.Value.ToString("o") : string.Empty;
+                var timeToReleaseStr = timeToRelease.HasValue ? timeToRelease.Value.ToString("F2") : string.Empty;
+
+                csvBuilder.AppendLine($"{group.Key},{createdStr},{securedStr},{releasedStr},{timeToReleaseStr}");
             }
 
             var bytes = System.Text.Encoding.UTF8.GetBytes(csvBuilder.ToString());

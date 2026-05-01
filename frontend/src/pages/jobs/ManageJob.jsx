@@ -119,27 +119,41 @@ export default function ManageJobPage() {
               <p style={{ fontSize: '0.8rem', color: '#555', marginTop: 6 }}>You'll be notified when providers apply.</p>
             </Card>
           ) : applicants.map(b => (
-            <Card key={b.id} style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <div>
-                <h4 style={{ fontSize: '1rem', marginBottom: 4 }}>{b.providerName}</h4>
-                <span style={{ fontSize: '0.75rem', color: '#888' }}>Applied {timeAgo(b.createdAt)}</span>
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                <Button variant="secondary" size="sm" onClick={() => navigate(`/profile/${b.providerId}`)}>
-                  View Profile
-                </Button>
-                {job.status === 'Open' && (
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    loading={actionLoading === b.id}
-                    disabled={!!actionLoading && actionLoading !== b.id}
-                    onClick={() => handleSelectApplicant(b.id, b.providerName)}
-                  >
-                    Choose & Pay
+            <Card key={b.id} style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+                <div>
+                  <h4 style={{ fontSize: '1.1rem', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {b.providerName}
+                    {b.isPreHire && <span style={{ fontSize: '0.65rem', background: 'var(--brand-primary)', color: 'white', padding: '2px 6px', borderRadius: 10, textTransform: 'uppercase' }}>Waiting</span>}
+                  </h4>
+                  <span style={{ fontSize: '0.75rem', color: '#888' }}>Applied {timeAgo(b.createdAt)}</span>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                  <Button variant="secondary" size="sm" onClick={() => navigate(`/profile/${b.providerId}`)}>
+                    Profile
                   </Button>
-                )}
+                  <Button variant="primary" size="sm" style={{ background: '#333', color: 'white', borderColor: '#444' }} onClick={() => navigate(`/chat/booking/${b.id}`)}>
+                    Interview Room
+                  </Button>
+                  {job.status === 'Open' && (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      loading={actionLoading === b.id}
+                      disabled={!!actionLoading && actionLoading !== b.id}
+                      onClick={() => handleSelectApplicant(b.id, b.providerName)}
+                    >
+                      Hire & Escrow
+                    </Button>
+                  )}
+                </div>
               </div>
+
+              {b.pitchNote && (
+                <div style={{ background: 'var(--bg-color)', padding: 12, borderRadius: 8, fontSize: '0.85rem', color: '#ccc', fontStyle: 'italic', borderLeft: '3px solid var(--brand-primary)' }}>
+                  "{b.pitchNote}"
+                </div>
+              )}
             </Card>
           ))}
         </div>

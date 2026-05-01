@@ -107,7 +107,7 @@ export default function ProfilePage() {
         {/* Actions */}
         <div className={styles.actions}>
           <Button block variant="secondary" onClick={() => navigate('/create-service')}>+ Host New Service</Button>
-          {user.role === 'Admin' && (
+          {(user.role === 'Admin' || user.role === 'SuperAdmin') && (
             <Button block variant="danger" onClick={() => navigate('/admin')}>⚡ Admin Console</Button>
           )}
         </div>
@@ -122,7 +122,7 @@ export default function ProfilePage() {
         ) : myServices.length === 0 ? (
           <div className={styles.empty}>No services yet. Host your first service!</div>
         ) : myServices.map(s => (
-          <Card key={s.id} className={styles.serviceRow} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', alignItems: 'stretch' }}>
+          <Card key={s.id} onClick={() => navigate('/service/' + s.id)} className={styles.serviceRow} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', alignItems: 'stretch', cursor: 'pointer' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700 }}>{s.title}</div>
@@ -135,7 +135,7 @@ export default function ProfilePage() {
               </span>
             </div>
             
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }} onClick={e => e.stopPropagation()}>
                <Button size="sm" variant="secondary" onClick={() => editService(s.id)}>✏️ Edit Base Rate</Button>
                {!s.isDiscoveryEnabled && (
                   <Button size="sm" variant="primary" onClick={() => activateService(s.id)}>💡 Activate</Button>

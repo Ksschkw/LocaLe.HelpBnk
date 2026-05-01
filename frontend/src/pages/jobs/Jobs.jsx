@@ -8,6 +8,8 @@ import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import TopBar from '../../components/layout/TopBar'
 import SortBar, { sortItems } from '../../components/ui/SortBar'
+import LocationPicker from '../../components/ui/LocationPicker'
+import LocationFilterBar from '../../components/ui/LocationFilterBar'
 import styles from './Jobs.module.css'
 
 const PRESET_CATEGORIES = [
@@ -19,10 +21,13 @@ export default function JobsPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const toast = useToast()
-  const { confirm } = useDialog()
+  const { confirm, prompt } = useDialog()
 
   const [showPost, setShowPost] = useState(false)
   const [form, setForm] = useState({ title: '', description: '', amount: '', categoryName: '', _customCategory: false })
+  const [jobLocation, setJobLocation] = useState(null)   // { display, country, state, city, streetAddress, lat, lng }
+  const [isRemoteJob, setIsRemoteJob] = useState(false)
+  const [locationFilter, setLocationFilter] = useState({ scope: 'global', global: true })
   const [posting, setPosting] = useState(false)
   const [tab, setTab] = useState('Marketplace')
   const [activeCategory, setActiveCategory] = useState('All')
@@ -57,14 +62,36 @@ export default function JobsPage() {
 
   useEffect(() => { loadJobs() }, [loadJobs])
 
-  // Client-side category filter + sort
+  // Client-side category + location filter + sort
   const jobs = useMemo(() => {
     let list = allJobs
     if (tab === 'Marketplace' && activeCategory !== 'All') {
       list = list.filter(j => j.categoryName === activeCategory)
     }
+    // Location filtering (client-side for UX speed)
+    if (tab === 'Marketplace' && !locationFilter.global) {
+      if (locationFilter.remoteOnly) {
+        list = list.filter(j => j.isRemote)
+      } else if (locationFilter.radiusKm && locationFilter.userLat && locationFilter.userLon) {
+        list = list.filter(j => {
+          if (j.isRemote) return true
+          if (!j.latitude || !j.longitude) return false
+          const dLat = (j.latitude - locationFilter.userLat) * Math.PI / 180
+          const dLon = (j.longitude - locationFilter.userLon) * Math.PI / 180
+          const a = Math.sin(dLat/2)**2 + Math.cos(locationFilter.userLat*Math.PI/180) * Math.cos(j.latitude*Math.PI/180) * Math.sin(dLon/2)**2
+          const d = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+          return d <= locationFilter.radiusKm
+        })
+      } else if (locationFilter.city) {
+        list = list.filter(j => j.city?.toLowerCase() === locationFilter.city?.toLowerCase())
+      } else if (locationFilter.state) {
+        list = list.filter(j => j.state?.toLowerCase() === locationFilter.state?.toLowerCase())
+      } else if (locationFilter.country) {
+        list = list.filter(j => j.country?.toLowerCase() === locationFilter.country?.toLowerCase())
+      }
+    }
     return sortItems(list, sortBy)
-  }, [allJobs, activeCategory, tab, sortBy])
+  }, [allJobs, activeCategory, tab, sortBy, locationFilter])
 
   // Chips: preset + any extra from the feed
   const availableCategories = useMemo(() => {
@@ -78,17 +105,30 @@ export default function JobsPage() {
   const handlePost = async (e) => {
     e.preventDefault()
     if (Number(form.amount) < 500) { toast('Minimum budget is ₦500', 'error'); return }
+    if (!isRemoteJob && !jobLocation?.country) {
+      toast('Please set a location for this job, or mark it as Remote.', 'error')
+      return
+    }
     setPosting(true)
     try {
       await jobsApi.create({
         title: form.title,
         description: form.description,
         amount: Number(form.amount),
-        categoryName: form.categoryName || undefined
+        categoryName: form.categoryName || undefined,
+        isRemote: isRemoteJob,
+        latitude: jobLocation?.lat ?? null,
+        longitude: jobLocation?.lng ?? null,
+        country: jobLocation?.country ?? null,
+        state: jobLocation?.state ?? null,
+        city: jobLocation?.city ?? null,
+        streetAddress: jobLocation?.streetAddress ?? null,
       })
       toast('Job posted to network! ✓', 'success')
       setShowPost(false)
       setForm({ title: '', description: '', amount: '', categoryName: '', _customCategory: false })
+      setJobLocation(null)
+      setIsRemoteJob(false)
       setTab('My Posted Jobs')
     } catch (e) {
       toast(e?.response?.data?.Error || e?.response?.data?.message || 'Failed to post', 'error')
@@ -97,10 +137,18 @@ export default function JobsPage() {
 
   const handleApply = async (e, jobId) => {
     e.stopPropagation()
+    const pitchNote = await prompt({
+      title: 'Send Application',
+      message: 'Write a short cover letter or pitch note to the buyer. This will start your private interview chat room.',
+      placeholder: 'E.g., I have 5 years experience with this...',
+      confirmText: 'Apply Now'
+    })
+    if (pitchNote === null) return // User cancelled
+
     try {
-      await bookingsApi.apply(jobId)
-      toast('Application sent! ✓', 'success')
-      loadJobs()
+      await bookingsApi.apply(jobId, pitchNote)
+      toast('Application sent! You are now in the Pre-Hire room. ✓', 'success')
+      navigate(`/jobs/manage/${jobId}`) // Take them to see their waitlisted chat
     } catch (e) {
       toast(e?.response?.data?.Error || e?.response?.data?.message || 'Already applied or not eligible', 'error')
     }
@@ -191,6 +239,19 @@ export default function JobsPage() {
                 autoFocus
               />
             )}
+
+            {/* ── Location Picker (required for non-remote) ── */}
+            <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '12px 14px' }}>
+              <p style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-2)', marginBottom: 10 }}>📍 Job Location</p>
+              <LocationPicker
+                value={jobLocation}
+                onChange={setJobLocation}
+                placeholder="Search street, area, city or country…"
+                isRemote={isRemoteJob}
+                onRemoteChange={setIsRemoteJob}
+              />
+            </div>
+
             <Button type="submit" block loading={posting}>Broadcast to Network</Button>
           </form>
         </div>
@@ -217,20 +278,25 @@ export default function JobsPage() {
         ))}
       </div>
 
-      {/* FILTERS: Category + Sort */}
-      <div style={{ borderBottom: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: 0 }}>
+      {/* FILTERS: Location Scope + Category + Sort */}
+      <div style={{ borderBottom: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 0 }}>
+        {tab === 'Marketplace' && (
+          <div style={{ padding: '10px 12px 0' }}>
+            <LocationFilterBar filter={locationFilter} onChange={setLocationFilter} />
+          </div>
+        )}
         {/* Category chips (marketplace only) */}
         {tab === 'Marketplace' && (
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none', padding: '8px 12px' }}>
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none', padding: '4px 12px 8px' }}>
             {availableCategories.map(cat => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
                 style={{
                   padding: '5px 14px', borderRadius: 20, border: '1px solid',
-                  borderColor: activeCategory === cat ? 'var(--brand-primary)' : 'var(--border-color)',
+                  borderColor: activeCategory === cat ? 'var(--brand-primary)' : 'var(--border)',
                   background: activeCategory === cat ? 'rgba(0,136,255,0.15)' : 'transparent',
-                  color: activeCategory === cat ? 'var(--brand-primary)' : 'var(--text-secondary)',
+                  color: activeCategory === cat ? 'var(--brand-primary)' : 'var(--text-2)',
                   fontWeight: activeCategory === cat ? '700' : '400',
                   cursor: 'pointer', fontSize: '0.78rem', whiteSpace: 'nowrap',
                   flexShrink: 0, transition: 'all 0.15s'
@@ -239,7 +305,6 @@ export default function JobsPage() {
             ))}
           </div>
         )}
-        {/* Shared sort bar — shown for both tabs */}
         <SortBar sortBy={sortBy} onChange={setSortBy} style={{ borderBottom: 'none' }} />
       </div>
 
@@ -292,9 +357,18 @@ export default function JobsPage() {
                   <p className={styles.jobDesc}>
                     {j.description?.substring(0, 100)}{j.description?.length > 100 ? '…' : ''}
                   </p>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-3)' }}>
-                    By {j.creatorName} · {timeAgo(j.createdAt)}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-3)' }}>
+                      By {j.creatorName} · {timeAgo(j.createdAt)}
+                    </span>
+                    {j.isRemote ? (
+                      <span style={{ fontSize: '0.68rem', background: 'rgba(0,200,83,0.15)', color: 'var(--success)', padding: '1px 7px', borderRadius: 8, fontWeight: 700 }}>🌐 Remote</span>
+                    ) : j.city ? (
+                      <span style={{ fontSize: '0.68rem', background: 'var(--bg-hover)', color: 'var(--text-2)', padding: '1px 7px', borderRadius: 8 }}>📍 {j.city}{j.state ? `, ${j.state}` : ''}</span>
+                    ) : j.country ? (
+                      <span style={{ fontSize: '0.68rem', background: 'var(--bg-hover)', color: 'var(--text-2)', padding: '1px 7px', borderRadius: 8 }}>🌍 {j.country}</span>
+                    ) : null}
+                  </div>
                 </div>
                 <div className={styles.jobAmt}>{fmt(j.amount)}</div>
               </div>

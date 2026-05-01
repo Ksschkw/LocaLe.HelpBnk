@@ -1,12 +1,14 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, SlidersHorizontal, Plus, MapPin } from 'lucide-react'
 import { searchApi, categoriesApi, servicesApi } from '../../api'
+import LocationFilterBar from '../../components/ui/LocationFilterBar'
 import { useAuth } from '../../contexts/AuthContext'
 import { useToast, fmt, tierEmoji, tierColor } from '../../hooks/useUtils'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import TopBar from '../../components/layout/TopBar'
+import SortBar, { sortItems } from '../../components/ui/SortBar'
 import styles from './Discover.module.css'
 
 export default function DiscoverPage() {
@@ -24,6 +26,8 @@ export default function DiscoverPage() {
   const [selectedCat, setSelectedCat] = useState(null)
   const [showFilters, setShowFilters] = useState(false)
   const [remoteOnly, setRemoteOnly] = useState(false)
+  const [locationFilter, setLocationFilter] = useState({ scope: 'global', global: true })
+  const [sortBy, setSortBy] = useState('newest')
 
   const searchRef = useRef(null)
 
@@ -68,20 +72,27 @@ export default function DiscoverPage() {
     setLoading(true)
     setShowAutocomplete(false)
     try {
-      if (!forcedQuery && !catId && !remoteOnly) {
+      if (!forcedQuery && !catId && !remoteOnly && (!locationFilter || locationFilter.global)) {
         // Empty search revert to general feed
         const res = await servicesApi.getAll({ isRemote: remoteOnly })
         setServices(res.data)
         return
       }
 
-      // Backend fuzzy search endpoint
-      // Note: We'd realistically pass category or remoteOnly if the backend Search API supports it,
-      // But looking at the schema, `/Search/services` takes query, lat, lon, radiusKm, isRemote.
-      const res = await searchApi.services({
-        query: forcedQuery || ' ', // API throws 400 if empty, so pass space if empty but filtering
-        isRemote: remoteOnly
-      })
+      // Build params for backend search, include location filter when provided
+      const params = { query: forcedQuery || ' ', isRemote: remoteOnly }
+      if (locationFilter && !locationFilter.global) {
+        if (locationFilter.userLat && locationFilter.userLon) {
+          params.lat = locationFilter.userLat
+          params.lon = locationFilter.userLon
+          if (locationFilter.radiusKm) params.radiusKm = locationFilter.radiusKm
+        }
+        if (locationFilter.city) params.city = locationFilter.city
+        if (locationFilter.state) params.state = locationFilter.state
+        if (locationFilter.country) params.country = locationFilter.country
+      }
+
+      const res = await searchApi.services(params)
       
       let filtered = res.data || []
       // Client fallback for Category if searchApi doesn't inherently filter it
@@ -127,6 +138,12 @@ export default function DiscoverPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const sortedServices = useMemo(() => {
+    // We already fetch and filter by category/remote via the backend.
+    // Apply client-side sorting based on 'sortBy'
+    return sortItems(services, sortBy, 'basePrice', 'title', 'id') // Using id since service doesn't have createdAt fetched currently, but basePrice/title works
+  }, [services, sortBy])
 
   return (
     <div className={styles.page}>
@@ -199,6 +216,9 @@ export default function DiscoverPage() {
                    setTimeout(() => performSearch(query, selectedCat), 0)
                 }} />
               </label>
+              <div style={{ marginTop: 8 }}>
+                <LocationFilterBar filter={locationFilter} onChange={setLocationFilter} />
+              </div>
             </div>
           )}
         </div>
@@ -221,17 +241,19 @@ export default function DiscoverPage() {
         {/* Services Feed mapping to API Real Results */}
         <h3 className={styles.sectionTitle}>Marketplace Feed</h3>
 
+        <SortBar sortBy={sortBy} onChange={setSortBy} style={{ borderBottom: 'none', marginBottom: '8px', padding: '0 4px' }} />
+
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="skeleton" style={{ height: 110, marginBottom: 12 }} />
           ))
-        ) : services.length === 0 ? (
+        ) : sortedServices.length === 0 ? (
           <div className={styles.empty}>
             <div style={{ fontSize: '3rem' }}>🔍</div>
             <p>No services found for this query.</p>
           </div>
         ) : (
-          services.map(s => (
+          sortedServices.map(s => (
             <ServiceCard key={s.id} service={s} onClick={() => navigate(`/service/${s.id}`)} />
           ))
         )}

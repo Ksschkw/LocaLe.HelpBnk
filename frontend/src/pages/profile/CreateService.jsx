@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { categoriesApi, servicesApi } from '../../api'
+import { uploadImageToCloudinary } from '../../utils/cloudinary'
 import { useToast } from '../../hooks/useUtils'
 import TopBar from '../../components/layout/TopBar'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
+import LocationPicker from '../../components/ui/LocationPicker'
+import { Image as ImageIcon } from 'lucide-react'
 import styles from './CreateService.module.css'
 
 export default function CreateServicePage() {
@@ -13,6 +16,8 @@ export default function CreateServicePage() {
   
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(false)
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
   const [form, setForm] = useState({
     categoryId: '',
     title: '',
@@ -23,6 +28,7 @@ export default function CreateServicePage() {
     areaName: '',
     newCategoryName: ''
   })
+  const [locationData, setLocationData] = useState(null)
 
   useEffect(() => {
     categoriesApi.getAll().then(res => setCategories(res.data)).catch(console.error)
@@ -31,6 +37,18 @@ export default function CreateServicePage() {
   const set = k => e => {
     const val = e.target.type === 'checkbox' ? e.target.checked : e.target.value
     setForm(f => ({ ...f, [k]: val }))
+  }
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast('Image must be less than 5MB', 'error')
+        return
+      }
+      setImageFile(file)
+      setImagePreview(URL.createObjectURL(file))
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -46,12 +64,37 @@ export default function CreateServicePage() {
          finalCategoryId = catRes.data.id;
       }
 
-      await servicesApi.create({
+      let uploadedUrl = null
+      if (imageFile) {
+        toast('Uploading portfolio image...', 'info')
+        uploadedUrl = await uploadImageToCloudinary(imageFile)
+      }
+
+      const payload = {
         ...form,
         categoryId: finalCategoryId,
         basePrice: parseFloat(form.basePrice || 0),
-        hourlyRate: parseFloat(form.hourlyRate || 0)
-      })
+        hourlyRate: parseFloat(form.hourlyRate || 0),
+        portfolioImageUrl: uploadedUrl
+      }
+
+      if (!form.isRemote) {
+        if (!locationData) { toast('Please select your service location', 'error'); setLoading(false); return }
+        payload.latitude = locationData.lat ?? locationData.latitude ?? null
+        payload.longitude = locationData.lng ?? locationData.lon ?? locationData.longitude ?? null
+        payload.country = locationData.country ?? null
+        payload.state = locationData.state ?? null
+        payload.city = locationData.city ?? null
+        payload.areaName = locationData.display ?? form.areaName
+      } else {
+        payload.latitude = null
+        payload.longitude = null
+        payload.country = null
+        payload.state = null
+        payload.city = null
+      }
+
+      await servicesApi.create(payload)
       toast('Service created successfully!', 'success')
       navigate('/profile')
     } catch (err) {
@@ -110,8 +153,34 @@ export default function CreateServicePage() {
           </div>
 
           {!form.isRemote && (
-            <Input label="Service Area" placeholder="e.g. Lekki Phase 1, Lagos" value={form.areaName} onChange={set('areaName')} required={!form.isRemote} />
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Service Location</label>
+              <LocationPicker
+                value={locationData}
+                onChange={setLocationData}
+                placeholder="Select your country / state / city…"
+              />
+            </div>
           )}
+
+          <div className={styles.inputGroup} style={{ marginTop: 16 }}>
+            <label className={styles.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <ImageIcon size={18} /> Portfolio Image (Optional)
+            </label>
+            <input 
+              type="file" 
+              accept="image/*" 
+              onChange={handleImageChange}
+              style={{ display: 'block', padding: '8px 0' }}
+            />
+            {imagePreview && (
+              <img 
+                src={imagePreview} 
+                alt="Preview" 
+                style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 8, marginTop: 12, border: '1px solid var(--border-color)' }} 
+              />
+            )}
+          </div>
 
           <Button type="submit" block size="lg" loading={loading} style={{ marginTop: 16 }}>Publish Service</Button>
         </form>

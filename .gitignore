@@ -8,3 +8,5 @@ obj/
 localedb.sqlite
 .vscode
 .env*
+*.txt
+fyp*

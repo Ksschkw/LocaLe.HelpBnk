@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using LocaLe.EscrowApi.DTOs;
 using LocaLe.EscrowApi.Interfaces;
+using LocaLe.EscrowApi.Interfaces.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -282,7 +283,8 @@ namespace LocaLe.EscrowApi.Controllers
         public async Task<IActionResult> ImpersonateUser(
             Guid userId,
             [FromServices] LocaLe.EscrowApi.Interfaces.Repositories.IUserRepository userRepo,
-            [FromServices] LocaLe.EscrowApi.Interfaces.IAuthService authService)
+            [FromServices] LocaLe.EscrowApi.Interfaces.IAuthService authService,
+            [FromServices] LocaLe.EscrowApi.Interfaces.Repositories.IAuditLogRepository auditRepo)
         {
             var targetUser = await userRepo.GetByIdAsync(userId);
             if (targetUser == null) return NotFound(new { Error = "Target user not found." });
@@ -301,9 +303,26 @@ namespace LocaLe.EscrowApi.Controllers
             // but let's delegate to authService if we can.
             
             // Wait, to do it cleanly, let's inject IConfiguration and generate token here to avoid changing IAuthService signature inside replace block.
-            var tokenString = GenerateJwtToken(targetUser, HttpContext.RequestServices.GetRequiredService<IConfiguration>());
+            // Create a short-lived parent token for the acting admin so they can revert impersonation later.
+            var actorId = GetCurrentUserId();
+            var adminUser = await userRepo.GetByIdAsync(actorId);
+            if (adminUser == null) return NotFound(new { Error = "Admin user not found." });
 
-            // Set cookie for automatic login
+            var config = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+            var parentToken = GenerateJwtToken(adminUser, config);
+
+            var parentCookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddDays(7)
+            };
+            Response.Cookies.Append("impersonation_parent", parentToken, parentCookieOptions);
+
+            var tokenString = GenerateJwtToken(targetUser, config);
+
+            // Set cookie for automatic login as the target user
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
@@ -313,6 +332,18 @@ namespace LocaLe.EscrowApi.Controllers
             };
             Response.Cookies.Append("locale_token", tokenString, cookieOptions);
 
+            // Audit the impersonation action
+            await auditRepo.AddAsync(new LocaLe.EscrowApi.Models.AuditLog
+            {
+                ReferenceType = "User",
+                ReferenceId = targetUser.Id,
+                Action = "IMPERSONATION_START",
+                ActorId = adminUser.Id,
+                Details = $"Impersonated by {adminUser.Id} from IP {HttpContext.Connection.RemoteIpAddress}",
+                Timestamp = DateTime.UtcNow
+            });
+            await auditRepo.SaveChangesAsync();
+
             return Ok(new AuthResponse
             {
                 Token = tokenString,
@@ -321,6 +352,76 @@ namespace LocaLe.EscrowApi.Controllers
                 Email = targetUser.Email,
                 Role = targetUser.Role.ToString()
             });
+        }
+
+        /// <summary>
+        /// Revert an active impersonation by restoring the original SuperAdmin session stored in the
+        /// `impersonation_parent` cookie. This endpoint is intentionally AllowAnonymous so the
+        /// impersonated user can exit back to the admin session.
+        /// </summary>
+        [HttpPost("impersonate/revert")]
+        [AllowAnonymous]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        public async Task<IActionResult> RevertImpersonation(
+            [FromServices] LocaLe.EscrowApi.Interfaces.Repositories.IUserRepository userRepo,
+            [FromServices] LocaLe.EscrowApi.Interfaces.Repositories.IAuditLogRepository auditRepo)
+        {
+            if (!Request.Cookies.TryGetValue("impersonation_parent", out var parentToken) || string.IsNullOrEmpty(parentToken))
+            {
+                return BadRequest(new { Error = "No impersonation parent token present." });
+            }
+
+            var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+            var jwt = handler.ReadJwtToken(parentToken);
+            var adminIdClaim = jwt.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (adminIdClaim == null) return BadRequest(new { Error = "Invalid parent token." });
+
+            var adminId = Guid.Parse(adminIdClaim);
+            var adminUser = await userRepo.GetByIdAsync(adminId);
+            if (adminUser == null) return NotFound(new { Error = "Original admin user not found." });
+
+            var config = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+            var newAdminToken = GenerateJwtToken(adminUser, config);
+
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddDays(7)
+            };
+
+            Response.Cookies.Append("locale_token", newAdminToken, cookieOptions);
+
+            // Remove impersonation_parent cookie
+            Response.Cookies.Append("impersonation_parent", "", new CookieOptions { Expires = DateTime.UtcNow.AddDays(-1), HttpOnly = true, Secure = true, SameSite = SameSiteMode.None });
+
+            // Audit the revert
+            await auditRepo.AddAsync(new LocaLe.EscrowApi.Models.AuditLog
+            {
+                ReferenceType = "User",
+                ReferenceId = adminUser.Id,
+                Action = "IMPERSONATION_REVERT",
+                ActorId = adminUser.Id,
+                Details = $"Reverted impersonation to admin {adminUser.Id} from IP {HttpContext.Connection.RemoteIpAddress}",
+                Timestamp = DateTime.UtcNow
+            });
+            await auditRepo.SaveChangesAsync();
+
+            return Ok(new { Message = "Reverted to admin session." });
+        }
+
+        /// <summary>
+        /// Returns whether an impersonation parent token exists for the current session.
+        /// </summary>
+        [HttpGet("impersonate/active")]
+        [AllowAnonymous]
+        [ProducesResponseType(200)]
+        public IActionResult IsImpersonationActive()
+        {
+            var present = Request.Cookies.TryGetValue("impersonation_parent", out var parentToken) && !string.IsNullOrEmpty(parentToken);
+            return Ok(new { active = present });
         }
 
         private string GenerateJwtToken(LocaLe.EscrowApi.Models.User user, IConfiguration config)

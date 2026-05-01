@@ -1,12 +1,13 @@
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Bell } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { notificationsApi } from '../../api'
+import { notificationsApi, adminApi } from '../../api'
 import styles from './TopBar.module.css'
 
 export default function TopBar({ title, back, backTo, action }) {
   const navigate = useNavigate()
   const [unreadCount, setUnreadCount] = useState(0)
+  const [impersonationActive, setImpersonationActive] = useState(false)
 
   useEffect(() => {
     if ('Notification' in window && Notification.permission === 'default') {
@@ -26,6 +27,13 @@ export default function TopBar({ title, back, backTo, action }) {
       } catch {}
     }
     getCount()
+    const checkImpersonation = async () => {
+      try {
+        const { data } = await adminApi.isImpersonationActive()
+        if (data && data.active) setImpersonationActive(true)
+      } catch {}
+    }
+    checkImpersonation()
     const id = setInterval(getCount, 30000)
     return () => clearInterval(id)
   }, [])
@@ -47,6 +55,11 @@ export default function TopBar({ title, back, backTo, action }) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         {action && <div className={styles.action}>{action}</div>}
+        {impersonationActive && (
+          <button onClick={async () => { try { await adminApi.revertImpersonation(); window.location.reload() } catch {} }} style={{ background: 'transparent', border: '1px solid #ff6666', color: '#ff6666', padding: '6px 8px', borderRadius: 6, cursor: 'pointer' }}>
+            Revert to Admin
+          </button>
+        )}
         <button className={styles.bellBtn} onClick={() => navigate('/notifications')} style={{ background: 'transparent', border: 'none', color: 'white', position: 'relative', cursor: 'pointer', padding: '4px' }}>
           <Bell size={20} />
           {unreadCount > 0 && (

@@ -66,6 +66,8 @@ export const adminApi = {
   resolveFlaggedMessage: (flagId, adminNote) => api.post(`/Admin/flags/${flagId}/resolve`, { AdminNote: adminNote }),
   // SuperAdmin impersonation
   impersonateUser: (userId) => api.post(`/Admin/impersonate/${userId}`),
+  isImpersonationActive: () => api.get('/Admin/impersonate/active'),
+  revertImpersonation: () => api.post('/Admin/impersonate/revert'),
 }
 
 // --- Bookings ---

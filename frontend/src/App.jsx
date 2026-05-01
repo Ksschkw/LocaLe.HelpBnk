@@ -84,32 +84,54 @@ function AppShell() {
     if (outcome === 'accepted') setDeferredPrompt(null)
   }
 
-  // Push Notification Poller
+  // Push Notification via SignalR WebSockets (Replaced Polling)
   const [notifiedIds, setNotifiedIds] = useState(new Set())
+  
   useEffect(() => {
     if (!user) return
     
-    // Request permission once
+    // Request browser notification permission once
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission()
     }
 
-    const poll = async () => {
-      try {
-        const { data } = await notificationsApi.getAll()
-        const unread = data.filter(n => !n.isRead)
-        
-        unread.forEach(n => {
-          if (!notifiedIds.has(n.id) && Notification.permission === 'granted') {
-             new Notification('LocaLe Update', { body: n.message })
-             setNotifiedIds(prev => new Set(prev).add(n.id))
-          }
+    let connection = null;
+
+    const connectSignalR = async () => {
+      // Dynamic import to avoid blowing up the main bundle if offline
+      const { HubConnectionBuilder, LogLevel } = await import('@microsoft/signalr');
+      
+      connection = new HubConnectionBuilder()
+        .withUrl('/hubs/notifications', {
+            // Include credentials so the HTTPOnly JWT cookie is passed
+            withCredentials: true 
         })
-      } catch (e) { /* ignore polling errors */ }
+        .configureLogging(LogLevel.Warning)
+        .withAutomaticReconnect()
+        .build();
+
+      connection.on("ReceiveNotification", (notification) => {
+        if (!notifiedIds.has(notification.id) && Notification.permission === 'granted') {
+           new Notification(notification.title || 'LocaLe Update', { body: notification.body || notification.message })
+           setNotifiedIds(prev => new Set(prev).add(notification.id))
+        }
+      });
+
+      try {
+        await connection.start();
+        console.log("LocaLe SignalR WebSocket Connected.");
+      } catch (err) {
+        console.error("SignalR WebSocket failed to connect:", err);
+      }
+    };
+
+    connectSignalR();
+
+    return () => {
+      if (connection) {
+        connection.stop();
+      }
     }
-    
-    const interval = setInterval(poll, 10000)
-    return () => clearInterval(interval)
   }, [user, notifiedIds])
 
   return (
@@ -146,6 +168,7 @@ function AppShell() {
             <Route path="/create-service" element={<RequireAuth><CreateServicePage /></RequireAuth>} />
             <Route path="/service/:id" element={<RequireAuth><ServicePage /></RequireAuth>} />
             <Route path="/chat/:id" element={<RequireAuth><ChatPage /></RequireAuth>} />
+            <Route path="/chat/booking/:bookingId" element={<RequireAuth><ChatPage /></RequireAuth>} />
             <Route path="/notifications" element={<RequireAuth><NotificationsPage /></RequireAuth>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

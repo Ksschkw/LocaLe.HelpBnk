@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      fail_on_warnings:
+        description: 'Fail the build when compiler warnings are present'
+        required: false
+        default: 'false'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # Default is false so CI will not block deployments by default
+      FAIL_ON_WARNINGS: 'false'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          # Match your local SDK series (adjust if needed)
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore backend/LocaLe.EscrowApi.csproj
+
+      - name: Build (allow warnings)
+        run: dotnet build backend/LocaLe.EscrowApi.csproj --configuration Release --no-restore
+
+      - name: Fail on warnings (optional)
+        if: ${{ env.FAIL_ON_WARNINGS == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.fail_on_warnings == 'true') }}
+        run: |
+          echo "Failing build on compiler warnings (warn as error)"
+          dotnet build backend/LocaLe.EscrowApi.csproj --configuration Release --no-restore -warnaserror

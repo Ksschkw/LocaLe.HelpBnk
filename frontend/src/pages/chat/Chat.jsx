@@ -12,7 +12,9 @@ import TicTacToe from '../../components/game/TicTacToe'
 import styles from './Chat.module.css'
 
 export default function ChatPage() {
-  const { id: jobId } = useParams()
+  const { id, bookingId } = useParams()
+  // Ensure we have a jobId reference regardless of entry point
+  const [jobId, setJobId] = useState(id || null)
   const { user } = useAuth()
   const navigate = useNavigate()
   const toast = useToast()
@@ -34,33 +36,57 @@ export default function ChatPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const jobRes = await jobsApi.getById(jobId)
+      let resolvedJobId = jobId || id
+      let currentBooking = null
+
+      // If we entered via a Booking (Pre-Hire room)
+      if (bookingId) {
+        const bRes = await bookingsApi.mine()
+        currentBooking = bRes.data.find(b => b.id === bookingId)
+        if (currentBooking) {
+          setBooking(currentBooking)
+          resolvedJobId = currentBooking.jobId
+          if (!jobId) setJobId(resolvedJobId)
+        }
+      }
+
+      if (!resolvedJobId) return
+
+      const jobRes = await jobsApi.getById(resolvedJobId)
       setJob(jobRes.data)
       
-      // Attempt to load booking if available
-      try {
-        const bRes = await bookingsApi.mine()
-        const match = bRes.data.find(b => b.jobId === jobId)
-        if (match) {
-          setBooking(match)
-          try {
-            const eRes = await escrowApi.getByBooking(match.id)
-            setEscrow(eRes.data)
-          } catch (err) { /* Escrow might not be secured yet */ }
-        }
-      } catch (e) { /* ignore booking fail */ }
+      // Attempt to load booking and escrow if not already found
+      if (!currentBooking) {
+        try {
+          const bRes = await bookingsApi.mine()
+          currentBooking = bRes.data.find(b => b.jobId === resolvedJobId)
+          if (currentBooking) setBooking(currentBooking)
+        } catch (e) { /* ignore booking fail */ }
+      }
 
-      // Polling chats
-      const cRes = await chatsApi.getMessages(jobId)
-      setMessages(cRes.data || [])
+      if (currentBooking) {
+        try {
+          const eRes = await escrowApi.getByBooking(currentBooking.id)
+          setEscrow(eRes.data)
+        } catch (err) { /* Escrow might not be secured yet */ }
+      }
+
+      // Polling chats (use booking logic if pre-hire mode active, otherwise contract room)
+      if (bookingId) {
+        const cRes = await chatsApi.getBookingMessages(bookingId)
+        setMessages(cRes.data || [])
+      } else {
+        const cRes = await chatsApi.getMessages(resolvedJobId)
+        setMessages(cRes.data || [])
+      }
 
     } catch (e) {
-       toast('Failed to load job details', 'error')
+       toast('Failed to load chat room', 'error')
        navigate('/activity')
     } finally {
        setLoading(false)
     }
-  }, [jobId, navigate, toast])
+  }, [id, bookingId, jobId, navigate, toast])
 
   useEffect(() => {
     loadData()
@@ -106,11 +132,21 @@ export default function ChatPage() {
     const txt = inputMsg
     setInputMsg('')
     try {
-      // End-to-End Encryption mock flag hook
-      await chatsApi.sendMessage(jobId, { content: txt, isEncrypted: false })
+      if (bookingId) {
+        await chatsApi.sendBookingMessage(bookingId, { content: txt, isEncrypted: false })
+      } else {
+        await chatsApi.sendMessage(jobId, { content: txt, isEncrypted: false })
+      }
       loadData()
-    } catch {
-      toast('Failed to send message', 'error')
+    } catch (e) {
+      const data = e?.response?.data
+      if (data?.IsLeakageViolation) {
+        // Restore input so user sees what they typed, then warn them
+        setInputMsg(txt)
+        toast(data.Error, 'error')
+      } else {
+        toast('Failed to send message', 'error')
+      }
     }
   }
 
@@ -131,8 +167,8 @@ export default function ChatPage() {
     setActionLoading('secure')
     try {
       await bookingsApi.confirm(booking.id)
-      toast('Funds successfully locked in Escrow!', 'success')
-      loadData()
+      toast('Funds successfully locked! Pre-Hire room is now closed and escalated to Contract Room.', 'success')
+      navigate(`/chat/${jobId}`)
     } catch (e) { toast(e.response?.data?.message || 'Insufficient funds in Wallet', 'error') }
     finally { setActionLoading(false) }
   }
@@ -260,17 +296,21 @@ export default function ChatPage() {
               </div>
             )}
             
-            {/* If Booking exists, but no Escrow secured */}
+            {/* If Booking exists, but no Escrow secured (Pre-Hire Waitlist) */}
             {booking && booking.status === 'Pending' && !escrow && isBuyer && (
                <div style={{ textAlign: 'center' }}>
-                 <p style={{ color: '#888', marginBottom: 16 }}>Place your funds into the Iron Vault to begin.</p>
+                 {booking.isPreHire && <div style={{ fontSize: '0.8rem', color: '#ffb703', marginBottom: 12, border: '1px solid #ffb703', padding: 4, borderRadius: 4 }}>⚠️ PRE-HIRE INTERVIEW MODE</div>}
+                 <p style={{ color: '#888', marginBottom: 16 }}>Lock funds into the Iron Vault to hire this applicant and move to the Contract Room.</p>
                  <Button block loading={actionLoading==='secure'} onClick={handleSecureEscrow} style={{ background: 'linear-gradient(to right, #0088ff, #0055ff)' }}>
-                   Pay & Lock {fmt(job.amount)}
+                   Accept & Lock Vault ({fmt(job.amount)})
                  </Button>
                </div>
             )}
             {booking && booking.status === 'Pending' && !escrow && !isBuyer && (
-               <p style={{ color: '#888', textAlign: 'center', animation: 'pulse 2s infinite' }}>Awaiting the Buyer to lock funds in the Vault...</p>
+               <div style={{ textAlign: 'center' }}>
+                 {booking.isPreHire && <div style={{ fontSize: '0.8rem', color: '#ffb703', marginBottom: 12, border: '1px solid #ffb703', padding: 4, borderRadius: 4 }}>⚠️ PRE-HIRE WAITLIST</div>}
+                 <p style={{ color: '#888', textAlign: 'center', animation: 'pulse 2s infinite' }}>Awaiting the Buyer to accept your pitch and lock funds in the vault to establish a Contract!</p>
+               </div>
             )}
 
             {/* Escrow is Secured - In Progress */}
@@ -375,6 +415,14 @@ export default function ChatPage() {
              ) : (
                 messages.map(msg => {
                    const mine = msg.senderId === user?.userId
+                   if (msg.isSystemMessage) {
+                     return (
+                       <div key={msg.id} style={{ margin: '16px auto', maxWidth: '80%', padding: '12px', background: 'rgba(255, 183, 3, 0.1)', border: '1px solid #ffb703', borderRadius: '8px', color: '#ffb703', textAlign: 'center', fontSize: '0.85rem', lineHeight: '1.4' }}>
+                         <ShieldAlert size={18} style={{ marginBottom: 4 }} />
+                         <div>{msg.content}</div>
+                       </div>
+                     )
+                   }
                    return (
                      <div key={msg.id} className={[styles.msgRow, mine ? styles.mine : ''].join(' ')} onDoubleClick={async () => {
                        try {
